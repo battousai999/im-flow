@@ -25,8 +25,8 @@ namespace im_flow
                     .Required()
                     .UseForOrphanArguments();
 
-                parser.Setup(x => x.AutoExpandConsole)
-                    .As('x', "auto-expand-console")
+                parser.Setup(x => x.DisableAutoExpandConsole)
+                    .As('x', "no-auto-expand-console")
                     .SetDefault(true);
 
                 parser.Setup(x => x.OutputFilename)
@@ -47,7 +47,7 @@ namespace im_flow
 
                 var parameters = parser.Object;
                 var filename = parameters.Filename;
-                var autoExpand = parameters.AutoExpandConsole;
+                var autoExpand = !parameters.DisableAutoExpandConsole;
                 var outputFilename = parameters.OutputFilename;
                 var openInEditor = parameters.OpenInEditor;
 
