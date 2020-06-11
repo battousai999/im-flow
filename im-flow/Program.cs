@@ -117,44 +117,25 @@ namespace im_flow
                             _writer.WriteLine(text);
                     };
 
-                    Action<string> writeError = text =>
+                    Func<ConsoleColor, Action<string>> buildColoredWriter = color =>
                     {
-                        if (_writer == null)
+                        return text =>
                         {
-                            var saveColor = Console.ForegroundColor;
-                            Console.ForegroundColor = ConsoleColor.Red;
-                            Console.WriteLine(text);
-                            Console.ForegroundColor = saveColor;
-                        }
-                        else
-                            _writer.WriteLine(text);
+                            if (_writer == null)
+                            {
+                                var saveColor = Console.ForegroundColor;
+                                Console.ForegroundColor = color;
+                                Console.WriteLine(text);
+                                Console.ForegroundColor = saveColor;
+                            }
+                            else
+                                _writer.WriteLine(text);
+                        };
                     };
 
-                    Action<string> writeWarning = text =>
-                    {
-                        if (_writer == null)
-                        {
-                            var saveColor = Console.ForegroundColor;
-                            Console.ForegroundColor = ConsoleColor.Yellow;
-                            Console.WriteLine(text);
-                            Console.ForegroundColor = saveColor;
-                        }
-                        else
-                            _writer.WriteLine(text);
-                    };
-
-                    Action<string> writeSpecialInfo = text =>
-                    {
-                        if (_writer == null)
-                        {
-                            var saveColor = Console.ForegroundColor;
-                            Console.ForegroundColor = ConsoleColor.Cyan;
-                            Console.WriteLine(text);
-                            Console.ForegroundColor = saveColor;
-                        }
-                        else
-                            _writer.WriteLine(text);
-                    };
+                    Action<string> writeError = buildColoredWriter(ConsoleColor.Red);
+                    Action<string> writeWarning = buildColoredWriter(ConsoleColor.Yellow);
+                    Action<string> writeSpecialInfo = buildColoredWriter(ConsoleColor.Cyan);
 
                     // Output the message flow to the console...
                     Func<Entry, bool> isError = entry => !ignoreErrors && (entry.IsError || entry.IsWarning);
