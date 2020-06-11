@@ -143,12 +143,25 @@ namespace im_flow
                             _writer.WriteLine(text);
                     };
 
+                    Action<string> writeSpecialInfo = text =>
+                    {
+                        if (_writer == null)
+                        {
+                            var saveColor = Console.ForegroundColor;
+                            Console.ForegroundColor = ConsoleColor.Cyan;
+                            Console.WriteLine(text);
+                            Console.ForegroundColor = saveColor;
+                        }
+                        else
+                            _writer.WriteLine(text);
+                    };
+
                     // Output the message flow to the console...
                     Func<Entry, bool> isError = entry => !ignoreErrors && (entry.IsError || entry.IsWarning);
-                    var messageFlow = entries.Where(x => x.IsMessage || isError(x)).ToList();
+                    var messageFlow = entries.Where(x => x.IsMessage || isError(x) || x.IsSpecialInfo).ToList();
 
                     var genesysMessages = messageFlow.Where(x => x.IsReceivedFromGenesys || x.IsSentToGenesys).ToList();
-                    var fubuMessages = messageFlow.Where(x => x.IsReceivedFromFubu || x.IsSentToFubu).ToList();
+                    var fubuMessages = messageFlow.Where(x => x.IsReceivedFromFubu || x.IsSentToFubu || x.IsSentToTimService).ToList();
                     var sscMessages = messageFlow.Where(x => x.IsReceivedFromSsc || x.IsSentToSsc).ToList();
 
                     var maxGenesysMessageNameLength = genesysMessages.Max(x => x.GetGenesysMessage()?.Length ?? 0);
@@ -172,7 +185,7 @@ namespace im_flow
                     write("Genesys".PadRight(genesysPadding));
                     write("  (Interceptor)  ");
                     write("SSC".PadRight(sscPadding));
-                    writeLine(" Fubu Services");
+                    writeLine(" CoreBus/Other");
                     writeLine(new String('=', neededWidth));
 
                     var nonGenesysInitialSpacing = new String(' ', genesysPadding);
@@ -193,6 +206,10 @@ namespace im_flow
                         {
                             writeWarning($"WARN: {message.LogMessage}");
                         }
+                        else if (message.IsSpecialInfo)
+                        {
+                            writeSpecialInfo($"INFO: {message.GetSpecialInfoText()}");
+                        }
                         else if (message.IsGenesysMessage)
                         {
                             write(message.GetGenesysMessage().PadRight(genesysPadding));
@@ -204,12 +221,12 @@ namespace im_flow
                             write(message.IsSentMessage ? "       | |   ==> " : "       | |  <==  ");
                             writeLine(message.GetSscMessage());
                         }
-                        else if (message.IsFubuMessage)
+                        else if (message.IsFubuMessage || message.IsSentToTimService)
                         {
                             write(nonGenesysInitialSpacing);
                             write(message.IsSentMessage ? "       | |   ==> " : "       | |  <==  ");
                             write(fubuAfterSpacing);
-                            writeLine(message.GetFubuMessage());
+                            writeLine(message.GetFubuMessage() ?? ($"<{message.GetTimServiceCall()}>"));
                         }
                     });
                 }
