@@ -147,7 +147,7 @@ namespace im_flow
 
                     var maxGenesysMessageNameLength = genesysMessages.Max(x => x.GetGenesysMessage()?.Length ?? 0);
                     var maxSscMessageNameLength = sscMessages.Max(x => x.GetSscMessage()?.Length ?? 0);
-                    var maxFubuMessageNameLength = fubuMessages.Max(x => x.GetFubuMessage()?.Length ?? 0);
+                    var maxFubuMessageNameLength = fubuMessages.Max(x => (x.GetFubuMessage() ?? (x.GetTimServiceCall() + 2))?.Length ?? 0);
 
                     var dateFormat = "HH:mm:ss.ffff zzz";
                     var genesysPadding = Math.Max(maxGenesysMessageNameLength, 10);
@@ -156,7 +156,7 @@ namespace im_flow
                     var datePadding = DateTimeOffset.Now.ToString(dateFormat).Length;
                     var fubuPadding = Math.Max(maxFubuMessageNameLength, 13);
                     var interceptorPadding = 17;
-                    var neededWidth = lineNumberPadding + 1 + datePadding + 3 + genesysPadding + interceptorPadding + sscPadding + 1 + fubuPadding;
+                    var neededWidth = lineNumberPadding + 1 + datePadding + 3 + genesysPadding + interceptorPadding + sscPadding + 1 + fubuPadding + 1;
 
                     if (autoExpand && isOutputToConsole)
                         Console.WindowWidth = neededWidth + 1;
