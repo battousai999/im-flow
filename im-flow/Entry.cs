@@ -22,7 +22,8 @@ namespace im_flow
             new Regex(@"(^\(for\sWTWCallId\s=\s\d+,\sConnID\s=\s[\da-f]+\)$)", RegexOptions.IgnoreCase),
             new Regex(@"^(Unregistering\sCall\s\([\da-f]+\))\sas\slistener\sfor\sAcceptOfferMessage\.\.\.$", RegexOptions.IgnoreCase),
             new Regex(@"^(Adding\sparticipant\s'\d+',\slist\sis\snow\s\[[^\]]+])", RegexOptions.IgnoreCase),
-            new Regex(@"^(Created\sconsultation\scall\sobject\s\([\da-f]+\))$", RegexOptions.IgnoreCase)
+            new Regex(@"^(Created\sconsultation\scall\sobject\s\([\da-f]+\))$", RegexOptions.IgnoreCase),
+            new Regex(@"^(Waiting\sfor\sEventAttachedDataChanged\shaving\sdifferent\sRTargetAgentSelected,\sfound\schange\sfrom\s'.*'\sto\s'.*'.)$", RegexOptions.IgnoreCase)
         };
 
         public int LineNumber { get; }
