@@ -36,6 +36,10 @@ namespace im_flow
                     .As('e', "open-in-editor")
                     .SetDefault(false);
 
+                parser.Setup(x => x.IgnoreErrors)
+                    .As("ignore-errors")
+                    .SetDefault(false);
+
                 var results = parser.Parse(args);
 
                 if (results.HasErrors)
@@ -50,6 +54,7 @@ namespace im_flow
                 var autoExpand = !parameters.DisableAutoExpandConsole;
                 var outputFilename = parameters.OutputFilename;
                 var openInEditor = parameters.OpenInEditor;
+                var ignoreErrors = parameters.IgnoreErrors;
 
                 var content = File.ReadAllLines(filename);
 
@@ -112,8 +117,35 @@ namespace im_flow
                             _writer.WriteLine(text);
                     };
 
+                    Action<string> writeError = text =>
+                    {
+                        if (_writer == null)
+                        {
+                            var saveColor = Console.ForegroundColor;
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine(text);
+                            Console.ForegroundColor = saveColor;
+                        }
+                        else
+                            _writer.WriteLine(text);
+                    };
+
+                    Action<string> writeWarning = text =>
+                    {
+                        if (_writer == null)
+                        {
+                            var saveColor = Console.ForegroundColor;
+                            Console.ForegroundColor = ConsoleColor.Yellow;
+                            Console.WriteLine(text);
+                            Console.ForegroundColor = saveColor;
+                        }
+                        else
+                            _writer.WriteLine(text);
+                    };
+
                     // Output the message flow to the console...
-                    var messageFlow = entries.Where(x => x.IsMessage).ToList();
+                    Func<Entry, bool> isError = entry => !ignoreErrors && (entry.IsError || entry.IsWarning);
+                    var messageFlow = entries.Where(x => x.IsMessage || isError(x)).ToList();
 
                     var genesysMessages = messageFlow.Where(x => x.IsReceivedFromGenesys || x.IsSentToGenesys).ToList();
                     var fubuMessages = messageFlow.Where(x => x.IsReceivedFromFubu || x.IsSentToFubu).ToList();
@@ -153,7 +185,15 @@ namespace im_flow
                         write(message.LogDate.ToString(dateFormat));
                         write("   ");
 
-                        if (message.IsGenesysMessage)
+                        if (message.IsError)
+                        {
+                            writeError($"ERROR: {message.LogMessage}");
+                        }
+                        else if (message.IsWarning)
+                        {
+                            writeWarning($"WARN: {message.LogMessage}");
+                        }
+                        else if (message.IsGenesysMessage)
                         {
                             write(message.GetGenesysMessage().PadRight(genesysPadding));
                             writeLine(message.IsReceivedMessage ? "  ==>  | |       " : " <==   | |       ");

@@ -50,6 +50,8 @@ namespace im_flow
         public bool IsSscMessage => IsSentToSsc || IsReceivedFromSsc;
 
         public bool IsMessage => IsSentMessage || IsReceivedMessage;
+        public bool IsError => StringComparer.OrdinalIgnoreCase.Equals(LogLevel, "error");
+        public bool IsWarning => StringComparer.OrdinalIgnoreCase.Equals(LogLevel, "warn");
 
         public string GetGenesysMessage()
         {

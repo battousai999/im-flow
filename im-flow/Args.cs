@@ -10,5 +10,6 @@ namespace im_flow
         public bool DisableAutoExpandConsole { get; set; }
         public string OutputFilename { get; set; }
         public bool OpenInEditor { get; set; }
+        public bool IgnoreErrors { get; set; }
     }
 }
