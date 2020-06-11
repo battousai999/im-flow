@@ -27,7 +27,7 @@ namespace im_flow
 
                 parser.Setup(x => x.DisableAutoExpandConsole)
                     .As('x', "no-auto-expand-console")
-                    .SetDefault(true);
+                    .SetDefault(false);
 
                 parser.Setup(x => x.OutputFilename)
                     .As('o', "output-file");
@@ -178,7 +178,7 @@ namespace im_flow
                     var neededWidth = lineNumberPadding + 1 + datePadding + 3 + genesysPadding + interceptorPadding + sscPadding + 1 + fubuPadding;
 
                     if (autoExpand && isOutputToConsole)
-                        Console.WindowWidth = neededWidth;
+                        Console.WindowWidth = neededWidth + 1;
 
                     write("Line #".PadRight(lineNumberPadding + 1));
                     write("Date".PadRight(datePadding + 3));
