@@ -185,7 +185,7 @@ namespace im_flow
                     write("Genesys".PadRight(genesysPadding));
                     write("  (Interceptor)  ");
                     write("SSC".PadRight(sscPadding));
-                    writeLine(" CoreBus/Other");
+                    writeLine(" CoreBus/TIM");
                     writeLine(new String('=', neededWidth));
 
                     var nonGenesysInitialSpacing = new String(' ', genesysPadding);

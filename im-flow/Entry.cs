@@ -19,11 +19,15 @@ namespace im_flow
 
         public static readonly List<Regex> specialInfoRegexes = new List<Regex>
         {
-            new Regex(@"(^\(for\sWTWCallId\s=\s\d+,\sConnID\s=\s[\da-f]+\)$)", RegexOptions.IgnoreCase),
+            new Regex(@"^(\(for\sWTWCallId\s=\s\d+,\sConnID\s=\s[\da-f]+\))$", RegexOptions.IgnoreCase),
             new Regex(@"^(Unregistering\sCall\s\([\da-f]+\))\sas\slistener\sfor\sAcceptOfferMessage\.\.\.$", RegexOptions.IgnoreCase),
             new Regex(@"^(Adding\sparticipant\s'\d+',\slist\sis\snow\s\[[^\]]+])", RegexOptions.IgnoreCase),
+            new Regex(@"^(Removing\sparticipant\s'[^']*',\slist\sis\snow\s\[[^\]]*\])", RegexOptions.IgnoreCase),
             new Regex(@"^(Created\sconsultation\scall\sobject\s\([\da-f]+\))$", RegexOptions.IgnoreCase),
-            new Regex(@"^(Waiting\sfor\sEventAttachedDataChanged\shaving\sdifferent\sRTargetAgentSelected,\sfound\schange\sfrom\s'.*'\sto\s'.*'.)$", RegexOptions.IgnoreCase)
+            new Regex(@"^(Waiting\sfor\sEventAttachedDataChanged\shaving\sdifferent\sRTargetAgentSelected,\sfound\schange\sfrom\s'.*'\sto\s'.*'.)$", RegexOptions.IgnoreCase),
+            new Regex(@"^(Interceptor\sversion:\s+.*)$", RegexOptions.IgnoreCase),
+            new Regex(@"^(Registering\sGenesys\saddress\s\(.+\))\.\.\.$", RegexOptions.IgnoreCase),
+            new Regex(@"^(Retrieving\suser-specific\ssettings\s\(for\s'[^']*'\))\.\.\.", RegexOptions.IgnoreCase)
         };
 
         public int LineNumber { get; }
@@ -61,9 +65,20 @@ namespace im_flow
 
         public bool IsMessage => IsSentMessage || IsReceivedMessage;
         public bool IsError => StringComparer.OrdinalIgnoreCase.Equals(LogLevel, "error");
-        public bool IsWarning => StringComparer.OrdinalIgnoreCase.Equals(LogLevel, "warn");
+        public bool IsWarning => StringComparer.OrdinalIgnoreCase.Equals(LogLevel, "warn") && !IsIgnored;
         public bool IsSentToTimService => timServiceRegex.IsMatch(LogMessage);
         public bool IsSpecialInfo => specialInfoRegexes.Any(x => x.IsMatch(LogMessage));
+
+        public bool IsIgnored
+        {
+            get
+            {
+                if (StringComparer.OrdinalIgnoreCase.Equals(LogMessage, "setting name 'Interceptor' is invalid"))
+                    return true;
+
+                return false;
+            }
+        }
 
         public string GetGenesysMessage()
         {
