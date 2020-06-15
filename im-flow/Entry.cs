@@ -30,6 +30,12 @@ namespace im_flow
             new Regex(@"^(Retrieving\suser-specific\ssettings\s\(for\s'[^']*'\))\.\.\.", RegexOptions.IgnoreCase)
         };
 
+        public static readonly List<string> emphasizedGenesysMessages = new List<string>
+        {
+            "RequestMakeCall",
+            "EventRinging"
+        };
+
         public int LineNumber { get; }
         public DateTimeOffset LogDate { get; }
         public string LogLevel { get; }
@@ -68,6 +74,17 @@ namespace im_flow
         public bool IsWarning => StringComparer.OrdinalIgnoreCase.Equals(LogLevel, "warn") && !IsIgnored;
         public bool IsSentToTimService => timServiceRegex.IsMatch(LogMessage);
         public bool IsSpecialInfo => specialInfoRegexes.Any(x => x.IsMatch(LogMessage));
+
+        public bool IsEmphasizedGenesysMessage
+        {
+            get
+            {
+                if (!IsGenesysMessage)
+                    return false;
+
+                return emphasizedGenesysMessages.Contains(GetGenesysMessage(), StringComparer.OrdinalIgnoreCase);
+            }
+        }
 
         public bool IsIgnored
         {

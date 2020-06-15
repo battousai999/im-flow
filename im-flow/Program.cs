@@ -117,25 +117,40 @@ namespace im_flow
                             _writer.WriteLine(text);
                     };
 
-                    Func<ConsoleColor, Action<string>> buildColoredWriter = color =>
+                    Func<ConsoleColor, bool, Action<string>> buildColoredWriter = (color, withNewline) =>
                     {
+                        Action<string> consoleWriter;
+                        Action<string> streamWriter;
+
+                        if (withNewline)
+                        {
+                            consoleWriter = Console.WriteLine;
+                            streamWriter = text => _writer.WriteLine(text);
+                        }
+                        else
+                        {
+                            consoleWriter = Console.Write;
+                            streamWriter = text => _writer.Write(text);
+                        }
+
                         return text =>
                         {
                             if (_writer == null)
                             {
                                 var saveColor = Console.ForegroundColor;
                                 Console.ForegroundColor = color;
-                                Console.WriteLine(text);
+                                consoleWriter(text);
                                 Console.ForegroundColor = saveColor;
                             }
                             else
-                                _writer.WriteLine(text);
+                                streamWriter(text);
                         };
                     };
 
-                    Action<string> writeError = buildColoredWriter(ConsoleColor.Red);
-                    Action<string> writeWarning = buildColoredWriter(ConsoleColor.Yellow);
-                    Action<string> writeSpecialInfo = buildColoredWriter(ConsoleColor.Cyan);
+                    Action<string> writeError = buildColoredWriter(ConsoleColor.Red, true);
+                    Action<string> writeWarning = buildColoredWriter(ConsoleColor.Yellow, true);
+                    Action<string> writeSpecialInfo = buildColoredWriter(ConsoleColor.Cyan, true);
+                    Action<string> writeEmphasized = buildColoredWriter(ConsoleColor.Magenta, false);
 
                     // Output the message flow to the console...
                     Func<Entry, bool> isError = entry => !ignoreErrors && (entry.IsError || entry.IsWarning);
@@ -193,7 +208,13 @@ namespace im_flow
                         }
                         else if (message.IsGenesysMessage)
                         {
-                            write(message.GetGenesysMessage().PadRight(genesysPadding));
+                            var genesysMessage = message.GetGenesysMessage().PadRight(genesysPadding);
+
+                            if (message.IsEmphasizedGenesysMessage)
+                                writeEmphasized(genesysMessage);
+                            else
+                                write(genesysMessage);
+
                             writeLine(message.IsReceivedMessage ? "  ==>  | |       " : " <==   | |       ");
                         }
                         else if (message.IsSscMessage)
