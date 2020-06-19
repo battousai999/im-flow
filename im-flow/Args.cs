@@ -11,5 +11,7 @@ namespace im_flow
         public string OutputFilename { get; set; }
         public bool OpenInEditor { get; set; }
         public bool IgnoreErrors { get; set; }
+        public bool SuppressAnnotations { get; set; }
+        public bool IncludeHeartbeat { get; set; }
     }
 }

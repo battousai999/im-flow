@@ -36,6 +36,34 @@ namespace im_flow
             "EventRinging"
         };
 
+        public static readonly Dictionary<string, AnnotationInfo> annotations = new Dictionary<string, AnnotationInfo>
+        {
+            {
+                "RequestMakeCall",
+                new AnnotationInfo(
+                    new Regex("\"WTW_DNIS\":\\s\"([^\"]+)\","),
+                    match => $"(DNIS: {match.Groups[1].Value})")
+            },
+            {
+                "EventRinging",
+                new AnnotationInfo(
+                    new Regex("\\.OtherDN\":\\s\"([^\"]+)\","),
+                    match => $"(ANI: {match.Groups[1].Value})")
+            },
+            {
+                "EmployeePresenceChangingMessage",
+                new AnnotationInfo(
+                    new Regex("\"Availability\":\\s\"([^\"]+)\","),
+                    match => $"(Status: {match.Groups[1].Value})")
+            },
+            {
+                "EmployeePresenceChangedMessage",
+                new AnnotationInfo(
+                    new Regex("\"Availability\":\\s\"([^\"]+)\","),
+                    match => $"(Status: {match.Groups[1].Value})")
+            }
+        };
+
         public int LineNumber { get; }
         public DateTimeOffset LogDate { get; }
         public string LogLevel { get; }
@@ -189,6 +217,22 @@ namespace im_flow
                 payloadName = payloadName.RemoveTrailingData();
 
             return StringComparer.OrdinalIgnoreCase.Equals(messageEntry.GetMessageName(), payloadName);
+        }
+
+        public bool HasAnnotation => !String.IsNullOrWhiteSpace(Annotation);
+
+        public string Annotation
+        {
+            get
+            {
+                if (!(PayloadEntry?.ExtraLines?.Any() ?? false))
+                    return null;
+
+                if (!annotations.TryGetValue(GetMessageName(), out var annotation))
+                    return null;
+
+                return annotation.GetAnnotation(PayloadEntry.ExtraLines);
+            }
         }
     }
 }

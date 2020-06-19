@@ -40,6 +40,14 @@ namespace im_flow
                     .As("ignore-errors")
                     .SetDefault(false);
 
+                parser.Setup(x => x.SuppressAnnotations)
+                    .As('a', "suppress-annotations")
+                    .SetDefault(false);
+
+                parser.Setup(x => x.IncludeHeartbeat)
+                    .As('h', "include-heartbeat")
+                    .SetDefault(false);
+
                 var results = parser.Parse(args);
 
                 if (results.HasErrors)
@@ -55,6 +63,8 @@ namespace im_flow
                 var outputFilename = parameters.OutputFilename;
                 var openInEditor = parameters.OpenInEditor;
                 var ignoreErrors = parameters.IgnoreErrors;
+                var suppressAnnotations = parameters.SuppressAnnotations;
+                var includeHeartbeat = parameters.IncludeHeartbeat;
 
                 var content = File.ReadAllLines(filename);
 
@@ -152,9 +162,18 @@ namespace im_flow
                     Action<string> writeSpecialInfo = buildColoredWriter(ConsoleColor.Cyan, true);
                     Action<string> writeEmphasized = buildColoredWriter(ConsoleColor.Magenta, false);
 
+                    Action<int> writeSpaces = num => write(new String(' ', num));
+
                     // Output the message flow to the console...
                     Func<Entry, bool> isError = entry => !ignoreErrors && (entry.IsError || entry.IsWarning);
                     var messageFlow = entries.Where(x => x.IsMessage || isError(x) || x.IsSpecialInfo).ToList();
+
+                    if (!includeHeartbeat)
+                    {
+                        messageFlow = messageFlow
+                        .Where(x => !StringComparer.OrdinalIgnoreCase.Equals(x.GetGenesysMessage(), "EventAddressInfo"))
+                        .ToList();
+                    }
 
                     var genesysMessages = messageFlow.Where(x => x.IsReceivedFromGenesys || x.IsSentToGenesys).ToList();
                     var fubuMessages = messageFlow.Where(x => x.IsReceivedFromFubu || x.IsSentToFubu || x.IsSentToTimService).ToList();
@@ -172,9 +191,10 @@ namespace im_flow
                     var fubuPadding = Math.Max(maxFubuMessageNameLength, 13);
                     var interceptorPadding = 17;
                     var neededWidth = lineNumberPadding + 1 + datePadding + 3 + genesysPadding + interceptorPadding + sscPadding + 1 + fubuPadding + 1;
+                    var annotationBarPadding = lineNumberPadding + 1 + datePadding + 3 + genesysPadding + ((interceptorPadding - 3) / 2);
 
                     if (autoExpand && isOutputToConsole)
-                        Console.WindowWidth = neededWidth + 1;
+                        Console.WindowWidth = Math.Max(neededWidth + 1, Console.WindowWidth);
 
                     write("Line #".PadRight(lineNumberPadding + 1));
                     write("Date".PadRight(datePadding + 3));
@@ -216,12 +236,35 @@ namespace im_flow
                                 write(genesysMessage);
 
                             writeLine(message.IsReceivedMessage ? "  ==>  | |       " : " <==   | |       ");
+
+                            if (message.HasAnnotation && !suppressAnnotations)
+                            {
+                                writeSpaces(annotationBarPadding);
+                                write("| |");
+                                Console.SetCursorPosition(0, Console.CursorTop);
+                                writeSpaces(lineNumberPadding + 1 + datePadding + 3);
+
+                                if (message.IsEmphasizedGenesysMessage)
+                                    writeEmphasized(message.Annotation);
+                                else
+                                    write(message.Annotation);
+
+                                writeLine("");
+                            }
                         }
                         else if (message.IsSscMessage)
                         {
                             write(nonGenesysInitialSpacing);
                             write(message.IsSentMessage ? "       | |   ==> " : "       | |  <==  ");
                             writeLine(message.GetSscMessage());
+
+                            if (message.HasAnnotation && !suppressAnnotations)
+                            {
+                                writeSpaces(lineNumberPadding + 1 + datePadding + 3);
+                                write(nonGenesysInitialSpacing);
+                                write(message.IsSentMessage ? "       | |       " : "       | |       ");
+                                writeLine(message.Annotation);
+                            }
                         }
                         else if (message.IsFubuMessage || message.IsSentToTimService)
                         {
@@ -229,6 +272,15 @@ namespace im_flow
                             write(message.IsSentMessage ? "       | |   ==> " : "       | |  <==  ");
                             write(fubuAfterSpacing);
                             writeLine(message.GetFubuMessage() ?? ($"<{message.GetTimServiceCall()}>"));
+
+                            if (message.HasAnnotation && !suppressAnnotations)
+                            {
+                                writeSpaces(lineNumberPadding + 1 + datePadding + 3);
+                                write(nonGenesysInitialSpacing);
+                                write(message.IsSentMessage ? "       | |       " : "       | |       ");
+                                write(fubuAfterSpacing);
+                                writeLine(message.Annotation);
+                            }
                         }
                     });
                 }
