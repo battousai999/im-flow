@@ -23,30 +23,37 @@ namespace im_flow
                 parser.Setup(x => x.Filename)
                     .As('i', "input-file")
                     .Required()
-                    .UseForOrphanArguments();
+                    .UseForOrphanArguments()
+                    .WithDescription("<filename>  The name of the file to process (required)");
 
                 parser.Setup(x => x.DisableAutoExpandConsole)
                     .As('x', "no-auto-expand-console")
-                    .SetDefault(false);
+                    .SetDefault(false)
+                    .WithDescription("            Suppress expanding the width of the console to fit the content");
 
                 parser.Setup(x => x.OutputFilename)
-                    .As('o', "output-file");
+                    .As('o', "output-file")
+                    .WithDescription("<filename>  Write output to a file with a given name");
 
                 parser.Setup(x => x.OpenInEditor)
                     .As('e', "open-in-editor")
-                    .SetDefault(false);
+                    .SetDefault(false)
+                    .WithDescription("            Open the output in an editor");
 
                 parser.Setup(x => x.IgnoreErrors)
                     .As("ignore-errors")
-                    .SetDefault(false);
+                    .SetDefault(false)
+                    .WithDescription("            Suppress display of errors in output");
 
                 parser.Setup(x => x.SuppressAnnotations)
                     .As('a', "suppress-annotations")
-                    .SetDefault(false);
+                    .SetDefault(false)
+                    .WithDescription("            Suppress display of annotations in output");
 
                 parser.Setup(x => x.IncludeHeartbeat)
                     .As('h', "include-heartbeat")
-                    .SetDefault(false);
+                    .SetDefault(false)
+                    .WithDescription("            Include Genesys heartbeat messages (EventAddressInfo) in output");
 
                 var results = parser.Parse(args);
 
@@ -54,6 +61,19 @@ namespace im_flow
                 {
                     Log("Invalid command-line parameters.");
                     Log(@"Example usage: .\im-flow.exe -i c:\some-folder\interceptor.log");
+                    Log();
+
+                    var longNamePadding = parser.Options.Max(x => x.LongName.Length);
+
+                    parser.Options
+                        .ToList()
+                        .ForEach(x =>
+                        {
+                            Log($"   {(x.HasShortName ? $"-{x.ShortName}, " : "    ")}--{x.LongName.PadRight(longNamePadding)} {x.Description}");
+                        });
+
+                    Log();
+                    
                     return;
                 }
 
