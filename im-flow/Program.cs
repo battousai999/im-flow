@@ -213,9 +213,11 @@ namespace im_flow
                     var neededWidth = lineNumberPadding + 1 + datePadding + 3 + genesysPadding + interceptorPadding + sscPadding + 1 + fubuPadding + 1;
                     var annotationBarPadding = lineNumberPadding + 1 + datePadding + 3 + genesysPadding + ((interceptorPadding - 3) / 2);
 
+                    // Expand console width, if applicable
                     if (autoExpand && isOutputToConsole)
                         Console.WindowWidth = Math.Max(neededWidth + 1, Console.WindowWidth);
 
+                    // Write header
                     write("Line #".PadRight(lineNumberPadding + 1));
                     write("Date".PadRight(datePadding + 3));
                     write("Genesys".PadRight(genesysPadding));
@@ -227,6 +229,7 @@ namespace im_flow
                     var nonGenesysInitialSpacing = new String(' ', genesysPadding);
                     var fubuAfterSpacing = new String(' ', sscPadding + 1);
 
+                    // Write lines with message information
                     messageFlow.ForEach(message =>
                     {
                         write(message.LineNumber.ToString().PadRight(lineNumberPadding));
