@@ -41,26 +41,67 @@ namespace im_flow
             {
                 "RequestMakeCall",
                 new AnnotationInfo(
-                    new Regex("\"WTW_DNIS\":\\s\"([^\"]+)\","),
-                    match => $"(DNIS: {match.Groups[1].Value})")
+                    matches => $"({matches[0].FormatPhoneNumber()})",
+                    new Regex("\"WTW_DNIS\":\\s\"([^\"]+)\","))
             },
             {
                 "EventRinging",
                 new AnnotationInfo(
-                    new Regex("\\.OtherDN\":\\s\"([^\"]+)\","),
-                    match => $"(ANI: {match.Groups[1].Value})")
+                    matches => $"({matches[0].FormatPhoneNumber()})",
+                    new Regex("\\.OtherDN\":\\s\"([^\"]+)\","))
             },
             {
                 "EmployeePresenceChangingMessage",
                 new AnnotationInfo(
-                    new Regex("\"Availability\":\\s\"([^\"]+)\","),
-                    match => $"(Status: {match.Groups[1].Value})")
+                    matches => $"({matches[0]})",
+                    new Regex("\"Availability\":\\s\"([^\"]+)\","))
             },
             {
                 "EmployeePresenceChangedMessage",
                 new AnnotationInfo(
-                    new Regex("\"Availability\":\\s\"([^\"]+)\","),
-                    match => $"(Status: {match.Groups[1].Value})")
+                    matches => $"({matches[0]})",
+                    new Regex("\"Availability\":\\s\"([^\"]+)\","))
+            },
+            {
+                "EventReleased",
+                new AnnotationInfo(
+                    matches => $"({matches[0]})",
+                    new Regex("\\.ConnID\":\\s\"([^\"]+)\","))
+            },
+            {
+                "ParticipantChangedMessage",
+                new AnnotationInfo(
+                    matches => $"({matches[0]}/{matches[1]})",
+                    new Regex("\"Uri\":\\s\"([^\"]*)\""),
+                    new Regex("\"State\":\\s\"([^\"]*)\","))
+            },
+            {
+                "DispositionCallMessage",
+                new AnnotationInfo(
+                    matches => $"(DispositionId: {matches[0]})",
+                    new Regex("\"DispositionId\":\\s(\\d+),"))
+            },
+            {
+                "InviteInternalParticipantMessage",
+                new AnnotationInfo(
+                    matches => $"({matches[0]}{matches[1].FormatWithHeader(", IsTwoStep: ")})",
+                    new Regex("\"InvitedSipAddress\":\\s\"([^\"]+)\","),
+                    new Regex("\"IsTwoStep\":\\s([^,]+),"))
+            },
+            {
+                "AddExternalParticipantMessage",
+                new AnnotationInfo(
+                    matches => $"({matches[0].FormatPhoneNumber()}{matches[1].FormatWithHeader(", IsTwoStep: ")})",
+                    new Regex("\"PhoneNumber\":\\s\"([^\"]+)\""),
+                    new Regex("\"IsTwoStep\":\\s([^,]+),"))
+            },
+            {
+                "TransferCallToEmployeeMessage",
+                new AnnotationInfo(
+                    matches => $"(DesiredRoleId: {matches[0]}{matches[1].FormatWithHeader(", IsWarmTransfer: ")}{matches[2].FormatWithHeader(", IsTwoStep: ")})",
+                    new Regex("\"DesiredRoleId\":\\s([^,]+),"),
+                    new Regex("\"IsWarmTransfer\":\\s([^,]+),"),
+                    new Regex("\"IsTwoStep\":\\s([^,]+),"))
             }
         };
 

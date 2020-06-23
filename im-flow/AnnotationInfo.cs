@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -7,23 +8,25 @@ namespace im_flow
 {
     public class AnnotationInfo
     {
-        public Regex Regex { get; private set; }
-        public Func<Match, string> Projection { get; private set; }
+        public List<Regex> Regexes { get; private set; }
+        public Func<List<string>, string> Projection { get; private set; }
 
-        public AnnotationInfo(Regex regex, Func<Match, string> projection)
+        public AnnotationInfo(Func<List<string>, string> projection, params Regex[] regexes)
         {
-            this.Regex = regex;
+            this.Regexes = regexes.ToList();
             this.Projection = projection;
         }
 
         public string GetAnnotation(string text)
         {
-            var match = Regex.Match(text);
+            var matches = Regexes.Select(x => x.Match(text)).ToList();
 
-            if (!match.Success)
+            if (!matches.Any(x => x.Success))
                 return null;
 
-            return Projection(match);
+            var values = matches.Select(x => x.Success ? x.Groups[1].Value : null).ToList();
+
+            return Projection(values);
         }
 
         public string GetAnnotation(List<string> lines)

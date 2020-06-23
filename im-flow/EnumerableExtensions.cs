@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace im_flow
@@ -20,6 +21,25 @@ namespace im_flow
                 return text.Remove(text.Length - 4);
             else
                 return text;
+        }
+
+        public static string FormatPhoneNumber(this string text)
+        {
+            if (String.IsNullOrWhiteSpace(text))
+                return String.Empty;
+
+            if (text.All(x => Char.IsDigit(x)) && text.Length == 10)
+                return $"{text.Substring(0, 3)}-{text.Substring(3, 3)}-{text.Substring(6)}";
+            else
+                return text;
+        }
+
+        public static string FormatWithHeader(this string text, string header)
+        {
+            if (String.IsNullOrWhiteSpace(text))
+                return String.Empty;
+            else
+                return $"{header}{text}";
         }
     }
 }
