@@ -102,6 +102,12 @@ namespace im_flow
                     new Regex("\"DesiredRoleId\":\\s([^,]+),"),
                     new Regex("\"IsWarmTransfer\":\\s([^,]+),"),
                     new Regex("\"IsTwoStep\":\\s([^,]+),"))
+            },
+            {
+                "TserverReconnectionStatusChangedMessage",
+                new AnnotationInfo(
+                    matches => $"({matches[0]})",
+                    new Regex("\"Status\":\\s\"([^\"]+)\""))
             }
         };
 
