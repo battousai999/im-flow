@@ -194,7 +194,12 @@ namespace im_flow
 
                     // Output the message flow to the console...
                     Func<Entry, bool> isError = entry => !ignoreErrors && (entry.IsError || entry.IsWarning);
-                    var messageFlow = entries.Where(x => x.IsMessage || isError(x) || x.IsSpecialInfo).ToList();
+
+                    var messageFlow = entries
+                        .Where(x => x.IsMessage || isError(x) || x.IsSpecialInfo)
+                        .OrderBy(x => x.LogDate)
+                        .ThenBy(x => x, LogEntryComparer.Default)
+                        .ToList();
 
                     if (!includeHeartbeat)
                     {
