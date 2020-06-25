@@ -6,7 +6,7 @@ namespace im_flow
 {
     public class Args
     {
-        public string Filename { get; set; }
+        public List<string> Filenames { get; set; }
         public bool DisableAutoExpandConsole { get; set; }
         public string OutputFilename { get; set; }
         public bool OpenInEditor { get; set; }

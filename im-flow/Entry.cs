@@ -111,6 +111,7 @@ namespace im_flow
             }
         };
 
+        public string Filename { get; }
         public int LineNumber { get; }
         public DateTimeOffset LogDate { get; }
         public string LogLevel { get; }
@@ -119,8 +120,9 @@ namespace im_flow
         public List<string> ExtraLines { get; } = new List<string>();
         public Entry PayloadEntry { get; set; }
 
-        public Entry(int lineNumber, DateTimeOffset logDate, string logLevel, string @namespace, string message)
+        public Entry(string filename, int lineNumber, DateTimeOffset logDate, string logLevel, string @namespace, string message)
         {
+            this.Filename = filename;
             this.LineNumber = lineNumber;
             this.LogDate = logDate;
             this.LogLevel = logLevel;

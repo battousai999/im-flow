@@ -20,11 +20,11 @@ namespace im_flow
                 // Setup command-line parsing
                 var parser = new FluentCommandLineParser<Args>();
 
-                parser.Setup(x => x.Filename)
+                parser.Setup(x => x.Filenames)
                     .As('i', "input-file")
                     .Required()
                     .UseForOrphanArguments()
-                    .WithDescription("<filename>  The name of the file to process (required)");
+                    .WithDescription("<filename(s)>  The names of the files to process (required)");
 
                 parser.Setup(x => x.DisableAutoExpandConsole)
                     .As('x', "no-auto-expand-console")
@@ -78,22 +78,31 @@ namespace im_flow
                 }
 
                 var parameters = parser.Object;
-                var filename = parameters.Filename;
+                var filenames = parameters.Filenames;
                 var autoExpand = !parameters.DisableAutoExpandConsole;
                 var outputFilename = parameters.OutputFilename;
                 var openInEditor = parameters.OpenInEditor;
                 var ignoreErrors = parameters.IgnoreErrors;
                 var suppressAnnotations = parameters.SuppressAnnotations;
                 var includeHeartbeat = parameters.IncludeHeartbeat;
+                var areMultipleFiles = filenames.Count > 1;
 
-                var content = File.ReadAllLines(filename);
+                var content = filenames.SelectMany(x =>
+                {
+                    var values = File.ReadAllLines(x).Select((y, i) => new { LineNumber = i + 1, LineText = y });
+
+                    return values.Select(value => new { Filename = x, value.LineNumber, value.LineText });
+                });
 
                 // Parse lines in log file into Entry objects...
                 var entries = content.Aggregate(
-                    new { LineNumber = 1, Results = new List<Entry>() },
+                    new List<Entry>(),
                     (acc, x) =>
                     {
-                        var match = entryHeaderRegex.Match(x);
+                        var lineNumber = x.LineNumber;
+                        var text = x.LineText;
+                        var filename = x.Filename;
+                        var match = entryHeaderRegex.Match(text);
 
                         if (match.Success)
                         {
@@ -102,21 +111,20 @@ namespace im_flow
                             var @namespace = match.Groups[3].Value;
                             var message = match.Groups[4].Value;
 
-                            acc.Results.Add(new Entry(acc.LineNumber, logDate, logLevel, @namespace, message));
+                            acc.Add(new Entry(filename, lineNumber, logDate, logLevel, @namespace, message));
                         }
                         else
                         {
-                            var lastEntry = acc.Results.LastOrDefault();
+                            var lastEntry = acc.LastOrDefault();
 
                             if (lastEntry == null)
                                 throw new InvalidOperationException("First line must contain a entry header.");
 
-                            lastEntry.ExtraLines.Add(x);
+                            lastEntry.ExtraLines.Add(text);
                         }
 
-                        return new { LineNumber = acc.LineNumber + 1, acc.Results };
-                    },
-                    acc => acc.Results);
+                        return acc;
+                    });
 
                 // This will be used later (at some point) to provide payload details for messages
                 AssociatePayloads(entries);
@@ -229,9 +237,18 @@ namespace im_flow
                     var nonGenesysInitialSpacing = new String(' ', genesysPadding);
                     var fubuAfterSpacing = new String(' ', sscPadding + 1);
 
+                    string currentFilename = null;
+
                     // Write lines with message information
                     messageFlow.ForEach(message =>
                     {
+                        if (areMultipleFiles && !StringComparer.OrdinalIgnoreCase.Equals(currentFilename, message.Filename))
+                        {
+                            currentFilename = message.Filename;
+                            var bar = new String('-', currentFilename.Length);
+                            writeLine($"\n{bar}\n{Path.GetFileName(message.Filename)}\n{bar}");
+                        }
+
                         write(message.LineNumber.ToString().PadRight(lineNumberPadding));
                         write(" ");
                         write(message.LogDate.ToString(dateFormat));
