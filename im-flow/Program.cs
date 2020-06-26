@@ -6,6 +6,7 @@ using System.Linq;
 using System.Collections.Generic;
 using static Battousai.Utils.ConsoleUtils;
 using System.Diagnostics;
+using System.Globalization;
 
 namespace im_flow
 {
@@ -55,6 +56,11 @@ namespace im_flow
                     .SetDefault(false)
                     .WithDescription("            Include Genesys heartbeat messages (EventAddressInfo) in output");
 
+                parser.Setup(x => x.ParseLogDatesAsLocal)
+                    .As('l', "local-dates")
+                    .SetDefault(false)
+                    .WithDescription("            Parse log dates as local instead of UTC");
+
                 var results = parser.Parse(args);
 
                 if (results.HasErrors)
@@ -85,6 +91,7 @@ namespace im_flow
                 var ignoreErrors = parameters.IgnoreErrors;
                 var suppressAnnotations = parameters.SuppressAnnotations;
                 var includeHeartbeat = parameters.IncludeHeartbeat;
+                var parseDatesAsLocal = parameters.ParseLogDatesAsLocal;
                 var areMultipleFiles = filenames.Count > 1;
 
                 var content = filenames.SelectMany(x =>
@@ -93,6 +100,8 @@ namespace im_flow
 
                     return values.Select(value => new { Filename = x, value.LineNumber, value.LineText });
                 });
+
+                DateTimeStyles dateTimeStyles = (parseDatesAsLocal ? DateTimeStyles.AssumeLocal : DateTimeStyles.AssumeUniversal);
 
                 // Parse lines in log file into Entry objects...
                 var entries = content.Aggregate(
@@ -106,7 +115,7 @@ namespace im_flow
 
                         if (match.Success)
                         {
-                            var logDate = DateTimeOffset.Parse(match.Groups[1].Value);
+                            var logDate = DateTimeOffset.Parse(match.Groups[1].Value, null, dateTimeStyles);
                             var logLevel = match.Groups[2].Value;
                             var @namespace = match.Groups[3].Value;
                             var message = match.Groups[4].Value;
@@ -256,7 +265,7 @@ namespace im_flow
 
                         write(message.LineNumber.ToString().PadRight(lineNumberPadding));
                         write(" ");
-                        write(message.LogDate.ToString(dateFormat));
+                        write(message.LogDate.ToLocalTime().ToString(dateFormat));
                         write("   ");
 
                         if (message.IsError)
@@ -362,7 +371,7 @@ namespace im_flow
             {
                 IEnumerable<Entry> GetSubsequentEntries(Entry entry)
                 {
-                    foreach (var item in entries.SkipWhile(x => x != entry).Skip(1))
+                    foreach (var item in entries.SkipWhile(x => x != entry).Skip(1).Take(2000))
                     {
                         if (!alreadyAssociatedEntries.Contains(item))
                             yield return item;

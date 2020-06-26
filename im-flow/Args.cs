@@ -13,5 +13,6 @@ namespace im_flow
         public bool IgnoreErrors { get; set; }
         public bool SuppressAnnotations { get; set; }
         public bool IncludeHeartbeat { get; set; }
+        public bool ParseLogDatesAsLocal { get; set; }
     }
 }
