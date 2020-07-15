@@ -61,6 +61,10 @@ namespace im_flow
                     .SetDefault(false)
                     .WithDescription("            Parse log dates as local instead of UTC");
 
+                parser.Setup(x => x.MatchMessages)
+                    .As('m', "match-messages")
+                    .WithDescription("            Highlight messages that match given names");
+
                 var results = parser.Parse(args);
 
                 if (results.HasErrors)
@@ -93,6 +97,7 @@ namespace im_flow
                 var includeHeartbeat = parameters.IncludeHeartbeat;
                 var parseDatesAsLocal = parameters.ParseLogDatesAsLocal;
                 var areMultipleFiles = filenames.Count > 1;
+                var matchMessages = parameters.MatchMessages;
 
                 var content = filenames
                     .SelectMany(x => x.ContainsWildcards() ? EnumerateFiles(x) : x.ToSingleton())
@@ -200,8 +205,17 @@ namespace im_flow
                     Action<string> writeWarning = buildColoredWriter(ConsoleColor.Yellow, true);
                     Action<string> writeSpecialInfo = buildColoredWriter(ConsoleColor.Cyan, true);
                     Action<string> writeEmphasized = buildColoredWriter(ConsoleColor.Magenta, false);
+                    Action<string> writeMessageHighlight = buildColoredWriter(ConsoleColor.Green, false);
 
                     Action<int> writeSpaces = num => write(new String(' ', num));
+
+                    Func<string, bool> isMessageHighlightMatch = message =>
+                    {
+                        if ((matchMessages?.Count ?? 0) == 0)
+                            return false;
+
+                        return matchMessages.Contains(message, StringComparer.OrdinalIgnoreCase);
+                    };
 
                     // Output the message flow to the console...
                     Func<Entry, bool> isError = entry => !ignoreErrors && (entry.IsError || entry.IsFatal || entry.IsWarning);
@@ -288,12 +302,14 @@ namespace im_flow
                         }
                         else if (message.IsGenesysMessage)
                         {
-                            var genesysMessage = message.GetGenesysMessage().PadRight(genesysPadding);
+                            var genesysMessage = message.GetGenesysMessage();
 
-                            if (message.IsEmphasizedGenesysMessage)
-                                writeEmphasized(genesysMessage);
+                            if (isMessageHighlightMatch(genesysMessage))
+                                writeMessageHighlight(genesysMessage.PadRight(genesysPadding));
+                            else if (message.IsEmphasizedGenesysMessage)
+                                writeEmphasized(genesysMessage.PadRight(genesysPadding));
                             else
-                                write(genesysMessage);
+                                write(genesysMessage.PadRight(genesysPadding));
 
                             writeLine(message.IsReceivedMessage ? "  ==>  | |       " : " <==   | |       ");
 
@@ -316,7 +332,16 @@ namespace im_flow
                         {
                             write(nonGenesysInitialSpacing);
                             write(message.IsSentMessage ? "       | |   ==> " : "       | |  <==  ");
-                            writeLine(message.GetSscMessage());
+
+                            var sscMessage = message.GetSscMessage();
+
+                            if (isMessageHighlightMatch(sscMessage))
+                            {
+                                writeMessageHighlight(sscMessage);
+                                writeLine("");
+                            }
+                            else
+                                writeLine(sscMessage);
 
                             if (message.HasAnnotation && !suppressAnnotations)
                             {
@@ -331,7 +356,16 @@ namespace im_flow
                             write(nonGenesysInitialSpacing);
                             write(message.IsSentMessage ? "       | |   ==> " : "       | |  <==  ");
                             write(fubuAfterSpacing);
-                            writeLine(message.GetFubuMessage() ?? ($"<{message.GetTimServiceCall()}>"));
+
+                            var fubuMessage = message.GetFubuMessage() ?? $"<{message.GetTimServiceCall()}>";
+
+                            if (isMessageHighlightMatch(fubuMessage))
+                            {
+                                writeMessageHighlight(fubuMessage);
+                                writeLine("");
+                            }
+                            else
+                                writeLine(fubuMessage);
 
                             if (message.HasAnnotation && !suppressAnnotations)
                             {
