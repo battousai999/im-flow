@@ -94,12 +94,14 @@ namespace im_flow
                 var parseDatesAsLocal = parameters.ParseLogDatesAsLocal;
                 var areMultipleFiles = filenames.Count > 1;
 
-                var content = filenames.SelectMany(x =>
-                {
-                    var values = File.ReadAllLines(x).Select((y, i) => new { LineNumber = i + 1, LineText = y });
+                var content = filenames
+                    .SelectMany(x => x.ContainsWildcards() ? EnumerateFiles(x) : x.ToSingleton())
+                    .SelectMany(x =>
+                    {
+                        var values = File.ReadAllLines(x).Select((y, i) => new { LineNumber = i + 1, LineText = y });
 
-                    return values.Select(value => new { Filename = x, value.LineNumber, value.LineText });
-                });
+                        return values.Select(value => new { Filename = x, value.LineNumber, value.LineText });
+                    });
 
                 DateTimeStyles dateTimeStyles = (parseDatesAsLocal ? DateTimeStyles.AssumeLocal : DateTimeStyles.AssumeUniversal);
 
@@ -364,6 +366,17 @@ namespace im_flow
             },
             false,
             false);
+        }
+
+        private static IEnumerable<string> EnumerateFiles(string wildcardFilename)
+        {
+            var path = Path.GetDirectoryName(wildcardFilename);
+            var searchPattern = Path.GetFileName(wildcardFilename);
+
+            if (String.IsNullOrWhiteSpace(path))
+                path = @".\";
+
+            return Directory.GetFiles(path, searchPattern);
         }
 
         public static void AssociatePayloads(List<Entry> entries)

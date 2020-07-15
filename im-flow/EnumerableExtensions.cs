@@ -41,5 +41,10 @@ namespace im_flow
             else
                 return $"{header}{text}";
         }
+
+        public static bool ContainsWildcards(this string text)
+        {
+            return (text.Contains("*") || text.Contains("?"));
+        }
     }
 }
