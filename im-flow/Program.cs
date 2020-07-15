@@ -202,7 +202,7 @@ namespace im_flow
                     Action<int> writeSpaces = num => write(new String(' ', num));
 
                     // Output the message flow to the console...
-                    Func<Entry, bool> isError = entry => !ignoreErrors && (entry.IsError || entry.IsWarning);
+                    Func<Entry, bool> isError = entry => !ignoreErrors && (entry.IsError || entry.IsFatal || entry.IsWarning);
 
                     var messageFlow = entries
                         .Where(x => x.IsMessage || isError(x) || x.IsSpecialInfo)
@@ -271,6 +271,10 @@ namespace im_flow
                         if (message.IsError)
                         {
                             writeError($"ERROR: {message.LogMessage}");
+                        }
+                        else if (message.IsFatal)
+                        {
+                            writeError($"FATAL: {message.LogMessage}");
                         }
                         else if (message.IsWarning)
                         {

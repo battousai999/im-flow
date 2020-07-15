@@ -148,6 +148,7 @@ namespace im_flow
 
         public bool IsMessage => IsSentMessage || IsReceivedMessage;
         public bool IsError => StringComparer.OrdinalIgnoreCase.Equals(LogLevel, "error");
+        public bool IsFatal => StringComparer.OrdinalIgnoreCase.Equals(LogLevel, "fatal");
         public bool IsWarning => StringComparer.OrdinalIgnoreCase.Equals(LogLevel, "warn") && !IsIgnored;
         public bool IsSentToTimService => timServiceRegex.IsMatch(LogMessage);
         public bool IsSpecialInfo => specialInfoRegexes.Any(x => x.IsMatch(LogMessage));
