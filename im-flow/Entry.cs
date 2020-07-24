@@ -21,13 +21,16 @@ namespace im_flow
         {
             new Regex(@"^(\(for\sWTWCallId\s=\s\d+,\sConnID\s=\s[\da-f]+\))$", RegexOptions.IgnoreCase),
             new Regex(@"^(Unregistering\sCall\s\([\da-f]+\))\sas\slistener\sfor\sAcceptOfferMessage\.\.\.$", RegexOptions.IgnoreCase),
-            new Regex(@"^(Adding\sparticipant\s'\d+',\slist\sis\snow\s\[[^\]]+])", RegexOptions.IgnoreCase),
+            new Regex(@"^(Adding\sparticipant\s'[^']*',\slist\sis\snow\s\[[^\]]+])", RegexOptions.IgnoreCase),
             new Regex(@"^(Removing\sparticipant\s'[^']*',\slist\sis\snow\s\[[^\]]*\])", RegexOptions.IgnoreCase),
+            new Regex(@"^(Setting\sparticipants\sfrom\sattached\sdata,\slist\sis\snow\s\[[^\]]+])", RegexOptions.IgnoreCase),
             new Regex(@"^(Created\sconsultation\scall\sobject\s\([\da-f]+\))$", RegexOptions.IgnoreCase),
             new Regex(@"^(Waiting\sfor\sEventAttachedDataChanged\shaving\sdifferent\sRTargetAgentSelected,\sfound\schange\sfrom\s'.*'\sto\s'.*'.)$", RegexOptions.IgnoreCase),
             new Regex(@"^(Interceptor\sversion:\s+.*)$", RegexOptions.IgnoreCase),
             new Regex(@"^(Registering\sGenesys\saddress\s\(.+\))\.\.\.$", RegexOptions.IgnoreCase),
-            new Regex(@"^(Retrieving\suser-specific\ssettings\s\(for\s'[^']*'\))\.\.\.", RegexOptions.IgnoreCase)
+            new Regex(@"^(Retrieving\suser-specific\ssettings\s\(for\s'[^']*'\))\.\.\.", RegexOptions.IgnoreCase),
+            new Regex(@"^(Using\sLocal\sURI\s\(lq.tcp://[^/]*/interceptor\))", RegexOptions.IgnoreCase),
+            new Regex(@"^(Channel\s\w+\son\s\w+\sendpoint\s\([^)]*\))", RegexOptions.IgnoreCase)
         };
 
         public static readonly List<string> emphasizedGenesysMessages = new List<string>
