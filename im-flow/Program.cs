@@ -30,40 +30,40 @@ namespace im_flow
                 parser.Setup(x => x.DisableAutoExpandConsole)
                     .As('x', "no-auto-expand-console")
                     .SetDefault(false)
-                    .WithDescription("            Suppress expanding the width of the console to fit the content");
+                    .WithDescription("               Suppress expanding the width of the console to fit the content");
 
                 parser.Setup(x => x.OutputFilename)
                     .As('o', "output-file")
-                    .WithDescription("<filename>  Write output to a file with a given name");
+                    .WithDescription("<filename>     Write output to a file with a given name");
 
                 parser.Setup(x => x.OpenInEditor)
                     .As('e', "open-in-editor")
                     .SetDefault(false)
-                    .WithDescription("            Open the output in an editor");
+                    .WithDescription("               Open the output in an editor");
 
                 parser.Setup(x => x.IgnoreErrors)
                     .As("ignore-errors")
                     .SetDefault(false)
-                    .WithDescription("            Suppress display of errors in output");
+                    .WithDescription("               Suppress display of errors in output");
 
                 parser.Setup(x => x.SuppressAnnotations)
                     .As('a', "suppress-annotations")
                     .SetDefault(false)
-                    .WithDescription("            Suppress display of annotations in output");
+                    .WithDescription("               Suppress display of annotations in output");
 
                 parser.Setup(x => x.IncludeHeartbeat)
                     .As('h', "include-heartbeat")
                     .SetDefault(false)
-                    .WithDescription("            Include Genesys heartbeat messages (EventAddressInfo) in output");
+                    .WithDescription("               Include Genesys heartbeat messages (EventAddressInfo) in output");
 
                 parser.Setup(x => x.ParseLogDatesAsLocal)
                     .As('l', "local-dates")
                     .SetDefault(false)
-                    .WithDescription("            Parse log dates as local instead of UTC");
+                    .WithDescription("               Parse log dates as local instead of UTC");
 
                 parser.Setup(x => x.MatchMessages)
                     .As('m', "match-messages")
-                    .WithDescription("            Highlight messages that match given names");
+                    .WithDescription("               Highlight messages that match given names");
 
                 var results = parser.Parse(args);
 
