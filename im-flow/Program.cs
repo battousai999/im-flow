@@ -237,14 +237,14 @@ namespace im_flow
                     var fubuMessages = messageFlow.Where(x => x.IsReceivedFromFubu || x.IsSentToFubu || x.IsSentToTimService).ToList();
                     var sscMessages = messageFlow.Where(x => x.IsReceivedFromSsc || x.IsSentToSsc).ToList();
 
-                    var maxGenesysMessageNameLength = genesysMessages.Max(x => x.GetGenesysMessage()?.Length ?? 0);
-                    var maxSscMessageNameLength = sscMessages.Max(x => x.GetSscMessage()?.Length ?? 0);
-                    var maxFubuMessageNameLength = fubuMessages.Max(x => (x.GetFubuMessage() ?? (x.GetTimServiceCall() + 2))?.Length ?? 0);
+                    var maxGenesysMessageNameLength = !genesysMessages.Any() ? 0 : genesysMessages.Max(x => x.GetGenesysMessage()?.Length ?? 0);
+                    var maxSscMessageNameLength = !sscMessages.Any() ? 0 : sscMessages.Max(x => x.GetSscMessage()?.Length ?? 0);
+                    var maxFubuMessageNameLength = !fubuMessages.Any() ? 0 : fubuMessages.Max(x => (x.GetFubuMessage() ?? (x.GetTimServiceCall() + 2))?.Length ?? 0);
 
                     var dateFormat = "HH:mm:ss.ffff zzz";
                     var genesysPadding = Math.Max(maxGenesysMessageNameLength, 10);
                     var sscPadding = Math.Max(maxSscMessageNameLength, 10);
-                    var lineNumberPadding = Math.Max(messageFlow.Max(x => x.LineNumber.ToString().Length), 7);
+                    var lineNumberPadding = Math.Max((!messageFlow.Any() ? 0 : messageFlow.Max(x => x.LineNumber.ToString().Length)), 7);
                     var datePadding = DateTimeOffset.Now.ToString(dateFormat).Length;
                     var fubuPadding = Math.Max(maxFubuMessageNameLength, 13);
                     var interceptorPadding = 17;
@@ -275,8 +275,9 @@ namespace im_flow
                         if (areMultipleFiles && !StringComparer.OrdinalIgnoreCase.Equals(currentFilename, message.Filename))
                         {
                             currentFilename = message.Filename;
-                            var bar = new String('-', currentFilename.Length);
-                            writeLine($"\n{bar}\n{Path.GetFileName(message.Filename)}\n{bar}");
+                            var filename = Path.GetFileName(message.Filename);
+                            var bar = new String('-', filename.Length);
+                            writeLine($"\n{bar}\n{filename}\n{bar}");
                         }
 
                         write(message.LineNumber.ToString().PadRight(lineNumberPadding));
