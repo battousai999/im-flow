@@ -15,5 +15,6 @@ namespace im_flow
         public bool IncludeHeartbeat { get; set; }
         public bool ParseLogDatesAsLocal { get; set; }
         public List<string> MatchMessages { get; set; }
+        public bool ShowHelp { get; set; }
     }
 }

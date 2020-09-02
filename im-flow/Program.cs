@@ -65,9 +65,13 @@ namespace im_flow
                     .As('m', "match-messages")
                     .WithDescription("               Highlight messages that match given names");
 
+                parser.Setup(x => x.ShowHelp)
+                    .As("help")
+                    .WithDescription("               Show this help information");
+
                 var results = parser.Parse(args);
 
-                if (results.HasErrors)
+                if (results.HasErrors || parser.Object.ShowHelp)
                 {
                     Log("Invalid command-line parameters.");
                     Log(@"Example usage: .\im-flow.exe -i c:\some-folder\interceptor.log");
