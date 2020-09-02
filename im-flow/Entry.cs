@@ -112,6 +112,13 @@ namespace im_flow
                 new AnnotationInfo(
                     matches => $"({matches[0]})",
                     new Regex("\"Status\":\\s\"([^\"]+)\""))
+            },
+            {
+                "EventError",
+                new AnnotationInfo(
+                    matches => $"({matches[0]} — {matches[1]})",
+                    new Regex("\\.ErrorCode\":\\s(\\d+),"),
+                    new Regex("\\.ErrorMessage\":\\s\"([^\"]*)\","))
             }
         };
 
