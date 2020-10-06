@@ -100,11 +100,15 @@ namespace im_flow
                 var suppressAnnotations = parameters.SuppressAnnotations;
                 var includeHeartbeat = parameters.IncludeHeartbeat;
                 var parseDatesAsLocal = parameters.ParseLogDatesAsLocal;
-                var areMultipleFiles = filenames.Count > 1;
                 var matchMessages = parameters.MatchMessages;
 
-                var content = filenames
+                var allFilenames = filenames
                     .SelectMany(x => x.ContainsWildcards() ? EnumerateFiles(x) : x.ToSingleton())
+                    .ToList();
+
+                var areMultipleFiles = allFilenames.Count > 1;
+
+                var content = allFilenames
                     .SelectMany(x =>
                     {
                         var values = File.ReadAllLines(x).Select((y, i) => new { LineNumber = i + 1, LineText = y });
