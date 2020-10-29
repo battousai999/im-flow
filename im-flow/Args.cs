@@ -16,5 +16,6 @@ namespace im_flow
         public bool ParseLogDatesAsLocal { get; set; }
         public List<string> MatchMessages { get; set; }
         public bool ShowHelp { get; set; }
+        public bool ShowAllInfoMessages { get; set; }
     }
 }

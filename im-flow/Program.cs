@@ -65,6 +65,11 @@ namespace im_flow
                     .As('m', "match-messages")
                     .WithDescription("               Highlight messages that match given names");
 
+                parser.Setup(x => x.ShowAllInfoMessages)
+                    .As('f', "show-all-info")
+                    .SetDefault(false)
+                    .WithDescription("               Show all info messages");
+
                 parser.Setup(x => x.ShowHelp)
                     .As("help")
                     .WithDescription("               Show this help information");
@@ -101,6 +106,7 @@ namespace im_flow
                 var includeHeartbeat = parameters.IncludeHeartbeat;
                 var parseDatesAsLocal = parameters.ParseLogDatesAsLocal;
                 var matchMessages = parameters.MatchMessages;
+                var showAllInfo = parameters.ShowAllInfoMessages;
 
                 var allFilenames = filenames
                     .SelectMany(x => x.ContainsWildcards() ? EnumerateFiles(x) : x.ToSingleton())
@@ -227,9 +233,10 @@ namespace im_flow
 
                     // Output the message flow to the console...
                     Func<Entry, bool> isError = entry => !ignoreErrors && (entry.IsError || entry.IsFatal || entry.IsWarning);
+                    Func<Entry, bool> isFullInfo = entry => showAllInfo && entry.IsNonMessageInfo;
 
                     var messageFlow = entries
-                        .Where(x => x.IsMessage || isError(x) || x.IsSpecialInfo)
+                        .Where(x => x.IsMessage || isError(x) || x.IsSpecialInfo || isFullInfo(x))
                         .OrderBy(x => x.LogDate)
                         .ThenBy(x => x, LogEntryComparer.Default)
                         .ToList();
@@ -308,6 +315,10 @@ namespace im_flow
                         else if (message.IsSpecialInfo)
                         {
                             writeSpecialInfo($"INFO: {message.GetSpecialInfoText()}");
+                        }
+                        else if (message.IsNonMessageInfo)
+                        {
+                            writeSpecialInfo($"INFO: {message.LogMessage}");
                         }
                         else if (message.IsGenesysMessage)
                         {

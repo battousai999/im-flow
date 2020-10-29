@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -20,6 +21,7 @@ namespace im_flow
         public static readonly List<Regex> specialInfoRegexes = new List<Regex>
         {
             new Regex(@"^(\(for\sWTWCallId\s=\s\d+,\sConnID\s=\s[\da-f]+\))$", RegexOptions.IgnoreCase),
+            new Regex(@"^(\(Initialize\soutbound\scall\sfor\sWTWCallId\s=\s\d+,\sConnID\s=\s[\da-f]+\))$", RegexOptions.IgnoreCase),
             new Regex(@"^(Unregistering\sCall\s\([\da-f]+\))\sas\slistener\sfor\sAcceptOfferMessage\.\.\.$", RegexOptions.IgnoreCase),
             new Regex(@"^(Adding\sparticipant\s'[^']*',\slist\sis\snow\s\[[^\]]+])", RegexOptions.IgnoreCase),
             new Regex(@"^(Removing\sparticipant\s'[^']*',\slist\sis\snow\s\[[^\]]*\])", RegexOptions.IgnoreCase),
@@ -31,7 +33,22 @@ namespace im_flow
             new Regex(@"^(Retrieving\suser-specific\ssettings\s\(for\s'[^']*'\))\.\.\.", RegexOptions.IgnoreCase),
             new Regex(@"^(Using\sLocal\sURI\s\(lq.tcp://[^/]*/interceptor\))", RegexOptions.IgnoreCase),
             new Regex(@"^(Channel\s\w+\son\s\w+\sendpoint\s\([^)]*\))", RegexOptions.IgnoreCase),
+            new Regex(@"^(Set\senvironment\sspecific\sskill:\ss\.Env\.[\w\d]+)", RegexOptions.IgnoreCase),
+            new Regex(@"^(Setting\sAgentSipUri\sto:\s.+)$", RegexOptions.IgnoreCase),
+            new Regex(@"^(Setting\sAgentEmployeeId\sto:\s\d+)", RegexOptions.IgnoreCase),
+            new Regex(@"^(Unfinished\scall\sfile\sfound\s-\sattempting\sto\srecreate\scall\sobjects.)", RegexOptions.IgnoreCase),
+            new Regex(@"^(Genesys\sreports\sno\sunfinished\scalls)", RegexOptions.IgnoreCase),
+            new Regex(@"^(Unfinished\scall\s[\da-f]+\srecreated)", RegexOptions.IgnoreCase),
+            new Regex(@"^(Swapping\sheld\scalls\sActive:\s[\da-f]+\sHeld:\s[\da-f]+)", RegexOptions.IgnoreCase),
+            new Regex(@"^(Deferring\sremoval\sof\sparticipant\s\(DN=[^)]+\)\suntil\scall\sinvitation\saccepted)", RegexOptions.IgnoreCase),
+            new Regex(@"^(Connection\sID\schanged\sfrom\s[\da-f]+\sto\s[\da-f]+)", RegexOptions.IgnoreCase),
+            new Regex(@"^(Assign\snew\sCallEndpointNumber\s\([^)]+\)\sfrom\sparticipant\sserialization\sfor\s[^/]*/.*)$", RegexOptions.IgnoreCase),
             new Regex(@"^(>>>.*)$")
+        };
+
+        public static readonly List<Regex> ignoredInfoRegexes = new List<Regex>
+        {
+            new Regex(@"Passing through message to", RegexOptions.IgnoreCase)
         };
 
         public static readonly List<string> emphasizedGenesysMessages = new List<string>
@@ -163,6 +180,8 @@ namespace im_flow
         public bool IsWarning => StringComparer.OrdinalIgnoreCase.Equals(LogLevel, "warn") && !IsIgnored;
         public bool IsSentToTimService => timServiceRegex.IsMatch(LogMessage);
         public bool IsSpecialInfo => specialInfoRegexes.Any(x => x.IsMatch(LogMessage));
+        public bool IsNonMessageInfo => StringComparer.OrdinalIgnoreCase.Equals(LogLevel, "info") && !IsMessage && !IsIgnoredInfo;
+        public bool IsIgnoredInfo => ignoredInfoRegexes.Any(x => x.IsMatch(LogMessage));
 
         public bool IsEmphasizedGenesysMessage
         {
