@@ -51,10 +51,11 @@ namespace im_flow
             new Regex(@"Passing through message to", RegexOptions.IgnoreCase)
         };
 
-        public static readonly List<string> emphasizedGenesysMessages = new List<string>
+        public static readonly List<string> emphasizedMessages = new List<string>
         {
             "RequestMakeCall",
-            "EventRinging"
+            "EventRinging",
+            "OfferCallbackMessage"
         };
 
         public static readonly Dictionary<string, AnnotationInfo> annotations = new Dictionary<string, AnnotationInfo>
@@ -183,14 +184,11 @@ namespace im_flow
         public bool IsNonMessageInfo => StringComparer.OrdinalIgnoreCase.Equals(LogLevel, "info") && !IsMessage && !IsIgnoredInfo;
         public bool IsIgnoredInfo => ignoredInfoRegexes.Any(x => x.IsMatch(LogMessage));
 
-        public bool IsEmphasizedGenesysMessage
+        public bool IsEmphasizedMessage
         {
             get
             {
-                if (!IsGenesysMessage)
-                    return false;
-
-                return emphasizedGenesysMessages.Contains(GetGenesysMessage(), StringComparer.OrdinalIgnoreCase);
+                return emphasizedMessages.Contains(GetMessageName(), StringComparer.OrdinalIgnoreCase);
             }
         }
 

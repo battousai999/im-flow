@@ -326,7 +326,7 @@ namespace im_flow
 
                             if (isMessageHighlightMatch(genesysMessage))
                                 writeMessageHighlight(genesysMessage.PadRight(genesysPadding));
-                            else if (message.IsEmphasizedGenesysMessage)
+                            else if (message.IsEmphasizedMessage)
                                 writeEmphasized(genesysMessage.PadRight(genesysPadding));
                             else
                                 write(genesysMessage.PadRight(genesysPadding));
@@ -340,7 +340,7 @@ namespace im_flow
                                 Console.SetCursorPosition(0, Console.CursorTop);
                                 writeSpaces(lineNumberPadding + 1 + datePadding + 3);
 
-                                if (message.IsEmphasizedGenesysMessage)
+                                if (message.IsEmphasizedMessage)
                                     writeEmphasized(message.Annotation);
                                 else
                                     write(message.Annotation);
@@ -358,6 +358,11 @@ namespace im_flow
                             if (isMessageHighlightMatch(sscMessage))
                             {
                                 writeMessageHighlight(sscMessage);
+                                writeLine("");
+                            }
+                            else if (message.IsEmphasizedMessage)
+                            {
+                                writeEmphasized(sscMessage);
                                 writeLine("");
                             }
                             else
