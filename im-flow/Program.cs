@@ -303,10 +303,28 @@ namespace im_flow
                         if (message.IsError)
                         {
                             writeError($"ERROR: {message.LogMessage}");
+
+                            if (message.HasErrorAnnotation)
+                            {
+                                writeSpaces(annotationBarPadding);
+                                write("| |");
+                                Console.SetCursorPosition(0, Console.CursorTop);
+                                writeSpaces(lineNumberPadding + 1 + datePadding + 3);
+                                writeError(message.ErrorAnnotation);
+                            }
                         }
                         else if (message.IsFatal)
                         {
                             writeError($"FATAL: {message.LogMessage}");
+
+                            if (message.HasErrorAnnotation)
+                            {
+                                writeSpaces(annotationBarPadding);
+                                write("| |");
+                                Console.SetCursorPosition(0, Console.CursorTop);
+                                writeSpaces(lineNumberPadding + 1 + datePadding + 3);
+                                writeError(message.ErrorAnnotation);
+                            }
                         }
                         else if (message.IsWarning)
                         {

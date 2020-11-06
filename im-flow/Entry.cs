@@ -203,6 +203,19 @@ namespace im_flow
             }
         }
 
+        public bool HasErrorAnnotation => !String.IsNullOrWhiteSpace(ErrorAnnotation);
+
+        public string ErrorAnnotation
+        {
+            get
+            {
+                if (!IsError && !IsFatal || !ExtraLines.Any())
+                    return String.Empty;
+
+                return ExtraLines.First();
+            }
+        }
+
         public string GetGenesysMessage()
         {
             var matchSent = sentToGenesysRegex.Match(LogMessage);
