@@ -4,14 +4,17 @@ This `im-flow` .NET Core console application summarizes the message flow between
 ![Screenshot](assets/screen-01.png)
 
 For this screenshot, the output shows messages as follows:
-* Interceptor sent `PlaceOutboundCallResponseMessage` to SSC
-* Genesys sent four `EventUserEvent`s to Interceptor
-* Genesys sent `EventAttachedDataChanged` to Interceptor
-* Genesys sent `EventEstablished` to Interceptor
-* Genesys sent `EventUserEvent` to Interceptor
-* SSC sent `EmployeePresenceChangingMessage` to Interceptor
-* Interceptor sent `RequestQueryAddress` to Genesys
+* SSC sends `TransferCallToEmployeeMessage` to Interceptor
+* Interceptor calls `CallEvent` endpoint on TIM Service
+* Interceptor sends `RequestUpdateUserData` to Genesys
+* Genesys sends `EventAttachedDataChanged` to Interceptor
+* Interceptor sends `RequestSingleStepTransfer` to Genesys
+* Genesys sends `EventAttachedDataChanged` to Interceptor
 * and so on...
+
+Notice that selected INFO log-level messages are displayed in a cyan color (the `-f` command-line parameter will cause all INFO log-level messages to be displayed).  Also, events that indicate the beginning of a call (e.g., `EventRining`, `RequestMakeCall`, etc.) are displayed in a magenta color.  Error entries in the log file (all of which are always shown) are displayed in a red color.
+
+Some message (such as the `TransferCallToEmployeeMessage` in the screenshot above) also have annotations displaying extra information about the message.  (These annotations can be disabled using the `-a` command-line parameter).
 
 ## Example Usage
 By default, this app writes its output to the console.  The app can be run for a given Interceptor log file using either:
@@ -26,11 +29,41 @@ By default, this app writes its output to the console.  The app can be run for a
 .\im-flow.exe -i c:\some-path\interceptor.log
 ```
 
+Multiple files can be specified, and wildcards can be used:
+
+```
+.\im-flow.exe -i interceptor.log interceptor.20201106.*.log
+```
+
+When this application processes multiple files, it will preceed each file's set of entries with a header naming the log file.
+
 Note that the application, by default, will modify the width of the console in which it is run to fit the output.  To disable that, use the `-x` command-line parameter:
 
 ```
 .\im-flow.exe -x -i c:\some-path\interceptor.log
 ```
+
+## Highlighting a given message
+
+The `-m` or `--match-messages` command-line parameter can be used to highlight (in a green color) a given message:
+
+```
+.\im-flow.exe c:\some-path\interceptor.log -m EventReleased
+```
+
+Note that multiple messages can be specified:
+
+```
+.\im-flow.exe c:\some-path\interceptor.log -m EventAgentLogin EventAgentLogout
+```
+
+## Other command-line parameters
+
+Help text can be displayed by using the `--help` command-line parameter.
+
+By default, TServer connection heartbeat message, which are so numerous as to bloat the output, are not displayed.  However, the `-h` or `--include-heartbeat` command-line parameters can be used to include those messages in the output.
+
+By default, the application interprets the log dates within the log file as UTC dates.  However, in the past, Interceptor log files used local dates.  The `-l` or `--local-dates` command-line parameter can be used to interpret the log dates as local dates—useful for processing older Interceptor log files.
 
 ## Write Output to File
 The application can also be write its output to a file using the `-o` command-line parameter:
