@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+    <LangVersion>preview</LangVersion>
+    <RootNamespace>im_flow_fsharp</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Utils.fs" />
+    <Compile Include="OutputWriter.fs" />
+    <Compile Include="Entry.fs" />
+    <Compile Include="EntryProcessing.fs" />
+    <Compile Include="Args.fs" />
+    <Compile Include="CommandLineParsing.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Battousai.ConsoleUtils" Version="1.0.0" />
+    <PackageReference Include="FluentCommandLineParser.NETStandard" Version="1.5.0.31-commands" />
+  </ItemGroup>
+
+</Project>
