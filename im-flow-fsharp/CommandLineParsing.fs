@@ -83,6 +83,7 @@ let createParser() =
 
 let getHelpDisplay (parser : FluentCommandLineParser<'a>) =
     let longNamePadding = Enumerable.Max(parser.Options, fun x -> x.LongName.Length)
+
     let initialLines = 
         [
             "Invalid command-line parameters.";

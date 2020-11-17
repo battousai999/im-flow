@@ -20,6 +20,7 @@ let enumerateFiles (filename : string) =
 
 let (|Regex|_|) (regex : Regex) input =
     let m = regex.Match(input)
+
     if m.Success then Some(List.tail [ for g in m.Groups -> g.Value ])
     else None
 

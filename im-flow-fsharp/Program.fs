@@ -31,6 +31,7 @@ let app (parameters : Args) =
 let main argv =
     let parseArgs continuation = 
         let results = CommandLineParsing.parse argv
+
         match results with
         | ShowHelp text -> Log(text)
         | Success args -> continuation args

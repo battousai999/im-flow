@@ -42,9 +42,7 @@ let associatePayloads (entries : Entry list) =
                         yield item
             }
 
-        let payload =
-            candidatePayloads
-                |> Seq.tryFind (hasPayloadFor entry)
+        let payload = candidatePayloads |> Seq.tryFind (hasPayloadFor entry)
 
         match payload with
         | Some p -> { entry with PayloadEntry = Some p }
@@ -55,6 +53,7 @@ let associatePayloads (entries : Entry list) =
 
 let parseEntries parseDatesAsLocal (rawEntries : RawEntry seq) =
     let dateTimeStyle = if parseDatesAsLocal then DateTimeStyles.AssumeLocal else DateTimeStyles.AssumeUniversal
+
     let accumulator (acc : Entry ResizeArray * Entry option * string ResizeArray) (rawEntry : RawEntry) =
         let (entries, lastEntry, extraLines) = acc
 
