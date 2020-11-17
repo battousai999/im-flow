@@ -1,5 +1,6 @@
 ﻿module CommandLineParsing
 
+open System
 open Fclp
 open im_flow
 open Fclp.Internals
@@ -8,6 +9,7 @@ open System.Linq
 type ParseResults = 
     | Success of Args
     | ShowHelp of string
+
 
 let createParser() =
     let parser = FluentCommandLineParser<Args>()
@@ -78,6 +80,7 @@ let createParser() =
 
     parser
 
+
 let getHelpDisplay (parser : FluentCommandLineParser<'a>) =
     let longNamePadding = Enumerable.Max(parser.Options, fun x -> x.LongName.Length)
     let initialLines = 
@@ -94,7 +97,8 @@ let getHelpDisplay (parser : FluentCommandLineParser<'a>) =
         List.map buildLine (List.ofSeq parser.Options)
             |> List.append initialLines
 
-    List.fold (+) "" lines
+    List.fold (fun acc x -> $"{acc}{Environment.NewLine}{x}") "" lines
+
 
 let parse args =
     let parser = createParser()
