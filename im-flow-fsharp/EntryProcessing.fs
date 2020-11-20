@@ -45,7 +45,9 @@ let associatePayloads (entries : Entry list) =
         let payload = candidatePayloads |> Seq.tryFind (hasPayloadFor entry)
 
         match payload with
-        | Some p -> { entry with PayloadEntry = Some p }
+        | Some p -> 
+            alreadyAssociatedEntries.Add(p) |> ignore
+            { entry with PayloadEntry = Some p }
         | None -> entry
 
     entries |> List.map projection
@@ -60,6 +62,7 @@ let parseEntries parseDatesAsLocal (rawEntries : RawEntry seq) =
         match rawEntry.Text with
         | Utils.Regex entryHeaderRegex [ rawDate; logLevel; logNamespace; message ] ->
             let logDate = DateTimeOffset.Parse(rawDate, null, dateTimeStyle)
+
             let newEntry = 
                 { 
                     Entry.Filename = rawEntry.Filename 
@@ -86,5 +89,5 @@ let parseEntries parseDatesAsLocal (rawEntries : RawEntry seq) =
 
     let (entries, _, _) = rawEntries |> Seq.fold accumulator (ResizeArray(), None, ResizeArray())
 
-    associatePayloads <| List.ofSeq entries
+    List.ofSeq entries |> associatePayloads
     

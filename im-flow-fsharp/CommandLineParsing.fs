@@ -106,6 +106,6 @@ let parse args =
     let results = parser.Parse(args)
     
     if results.HasErrors || parser.Object.ShowHelp 
-    then ShowHelp <| getHelpDisplay parser
+    then ShowHelp (getHelpDisplay parser)
     else Success parser.Object
 

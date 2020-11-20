@@ -15,7 +15,7 @@ let enumerateFiles (filename : string) =
 
     let searchPattern = Path.GetFileName(filename)
 
-    Seq.ofArray <| Directory.GetFiles(path, searchPattern)
+    Directory.GetFiles(path, searchPattern) |> Seq.ofArray
 
 
 let (|Regex|_|) (regex : Regex) input =
