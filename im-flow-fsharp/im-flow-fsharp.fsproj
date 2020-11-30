@@ -11,6 +11,7 @@
     <Compile Include="Utils.fs" />
     <Compile Include="OutputWriter.fs" />
     <Compile Include="Entry.fs" />
+    <Compile Include="SummaryRenderer.fs" />
     <Compile Include="EntryProcessing.fs" />
     <Compile Include="Args.fs" />
     <Compile Include="CommandLineParsing.fs" />

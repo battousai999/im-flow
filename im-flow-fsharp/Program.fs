@@ -47,8 +47,7 @@ let app (parameters : Args) =
                             |> List.filter entriesFilter
                             |> List.sortWith entriesComparer
 
-    use streamWriter = if shouldOutputToConsole then null else new StreamWriter(outputFilename, false)
-    let outputWriter = if shouldOutputToConsole then buildConsoleWriter() else buildFileWriter(streamWriter)
+    let outputWriter = if shouldOutputToConsole then buildConsoleWriter() else buildFileWriter(new StreamWriter(outputFilename, false))
 
     ()
 

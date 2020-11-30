@@ -91,37 +91,43 @@ let isWarning entry = StringComparer.OrdinalIgnoreCase.Equals(entry.LogLevel, "w
 let getGenesysMessage (entry : Entry) =
     match entry.LogMessage with
     | Utils.Regex sentToGenesysRegex [ messageName ] ->
-        Utils.removeTrailingData messageName
+        Some (Utils.removeTrailingData messageName)
     | _ -> 
         match entry.LogMessage with
         | Utils.Regex receivedFromGenesysRegex [ messageName ] ->
-            Utils.removeTrailingData messageName
-        | _ -> null
+            Some (Utils.removeTrailingData messageName)
+        | _ -> None
 
 
 let getFubuMessage (entry : Entry) =
     match entry.LogMessage with
-    | Utils.Regex sentToFubuRegex [ messageName ] -> messageName
+    | Utils.Regex sentToFubuRegex [ messageName ] -> Some messageName
     | _ -> 
         match entry.LogMessage with
-        | Utils.Regex receivedFromFubuRegex [ messageName ] -> messageName
-        | _ -> null
+        | Utils.Regex receivedFromFubuRegex [ messageName ] -> Some messageName
+        | _ -> None
 
 
 let getSscMessage (entry : Entry) =
     match entry.LogMessage with
-    | Utils.Regex sentToSscRegex [ messageName ] -> messageName
+    | Utils.Regex sentToSscRegex [ messageName ] -> Some messageName
     | _ -> 
         match entry.LogMessage with
-        | Utils.Regex receivedFromSscRegex [ messageName ] -> messageName
-        | _ -> null
+        | Utils.Regex receivedFromSscRegex [ messageName ] -> Some messageName
+        | _ -> None
+
+
+let getTimServiceCall (entry : Entry) =
+    match entry.LogMessage with
+    | Utils.Regex sentToTimServiceRegex [ messageName ] -> Some messageName
+    | _ -> None
 
 
 let getMessageName entry =
     if isGenesysMessage entry then getGenesysMessage entry
     else if isFubuMessage entry then getFubuMessage entry
     else if isSscMessage entry then getSscMessage entry
-    else null
+    else None
 
 
 let hasPayloadFor (sourceEntry : Entry) (candidate : Entry) =
