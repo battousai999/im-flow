@@ -15,6 +15,7 @@
     <Compile Include="EntryProcessing.fs" />
     <Compile Include="Args.fs" />
     <Compile Include="CommandLineParsing.fs" />
+    <Compile Include="EntryComparer.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

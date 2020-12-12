@@ -3,8 +3,13 @@
 open OutputWriter
 open Entry
 open System
+open System.IO
 
-let render outputWriter entries isHighlightedMessage =
+type RenderItem = 
+    | FilenameSection of string
+    | EntrySection of Entry
+
+let render outputWriter entries isHighlightedMessage autoExpand areMultipleFiles =
     let write = outputWriter.WriteAction
     let writeLine = outputWriter.WriteLineAction
     
@@ -47,6 +52,62 @@ let render outputWriter entries isHighlightedMessage =
             |> Seq.filter (fun x -> (isReceivedFromSsc x) && (isSentToSsc x))
             |> safeMaxBy getLength
 
+    let dateFormat = "HH:mm:ss.ffff zzz"
+    let lineNumberPadding = 
+        let maxLineNumber = entries |> safeMaxBy (fun x -> x.LineNumber.ToString().Length)
+        Math.Max(maxLineNumber, 7)
+    let datePadding = DateTimeOffset.Now.ToString(dateFormat).Length
+    let genesysPadding = Math.Max(maxGenesysMessageNameLength, 10)
+    let interceptorPadding = 17
+    let sscPadding = Math.Max(maxSscMessageNameLength, 10)
+    let fubuPadding = Math.Max(maxFubuMessageNameLength, 13)
+    let fullWidth = lineNumberPadding + 1 + datePadding + 3 + genesysPadding + interceptorPadding + sscPadding + 1 + fubuPadding + 1
+    let nonGenesysInitialSpacing = String(' ', genesysPadding)
+    let fubuAfterSpacing = String(' ', sscPadding + 1)
 
+    let renderEntries = 
+        if not areMultipleFiles then
+            entries |> Seq.map (fun x -> EntrySection x)
+        else
+            let folder (currentList : RenderItem ResizeArray, currentFilename : string) entry =
+                if StringComparer.OrdinalIgnoreCase.Equals(currentFilename, entry.Filename) then
+                    currentList.Add(EntrySection entry)
+                    (currentList, currentFilename)
+                else
+                    currentList.Add(FilenameSection entry.Filename)
+                    currentList.Add(EntrySection entry)
+                    (currentList, entry.Filename)
+        
+            let (resultEntries, _) = entries |> Seq.fold folder (ResizeArray(), null)
+
+            resultEntries |> Seq.cast
+
+    // Expand console width, if applicable
+    if autoExpand then
+        outputWriter.SetWidth (fullWidth + 1)
+
+    // Write header
+    write ("Line #".PadRight(lineNumberPadding + 1))
+    write ("Date".PadRight(datePadding + 3))
+    write ("Genesys".PadRight(genesysPadding))
+    write "  (Interceptor)  "
+    write ("SSC".PadRight(sscPadding))
+    writeLine " CoreBus/TIM"
+    writeLine (String('=', fullWidth))
+
+    let renderEntry entry =
+        match entry with
+        | FilenameSection fullFilename ->
+            let filename = Path.GetFileName(fullFilename)
+            let bar = String('-', filename.Length)
+
+            writeLine $"\n{bar}\n{filename}\n{bar}"
+        | EntrySection entry ->
+            
+
+        ()
+
+    renderEntries
+        |> Seq.iter renderEntry
 
     ()

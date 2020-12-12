@@ -4,6 +4,7 @@ open CommandLineParsing
 open Utils
 open OutputWriter
 open Entry
+open EntryComparer
 open im_flow
 open type Battousai.Utils.ConsoleUtils
 open System.Collections.Generic
@@ -31,22 +32,9 @@ let app (parameters : Args) =
         ((Entry.isMessage x) || (isError x) || (Entry.isSpecialInfo x) || (isFullInfo x)) &&
         (parameters.IncludeHeartbeat || (not <| StringComparer.OrdinalIgnoreCase.Equals((Entry.getGenesysMessage x), "EventAddressInfo")))
 
-    let entriesComparer = fun (x : Entry) (y : Entry) ->
-        let dateComparer (x : Entry) (y : Entry) = Comparer<DateTimeOffset>.Default.Compare(x.LogDate, y.LogDate)
-        let secondaryComparer (x : Entry) (y : Entry) = 
-            let intComparer = Comparer<int>.Default.Compare
-
-            if StringComparer.OrdinalIgnoreCase.Equals(x.Filename, y.Filename)
-            then intComparer(x.LineNumber, y.LineNumber)
-            else -intComparer(x.LineNumber, y.LineNumber)
-
-        match (dateComparer x y) with
-        | value when value <> 0 -> value
-        | _ -> secondaryComparer x y
-
     let filteredEntries = entries 
                             |> List.filter entriesFilter
-                            |> List.sortWith entriesComparer
+                            |> List.sortWith entryComparer
 
     let outputWriter = if shouldOutputToConsole then buildConsoleWriter() else buildFileWriter(new StreamWriter(outputFilename, false))
 
