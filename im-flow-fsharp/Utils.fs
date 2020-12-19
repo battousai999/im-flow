@@ -29,3 +29,23 @@ let removeTrailingData (text : string) =
     if text.EndsWith("data", StringComparison.OrdinalIgnoreCase)
     then text.Remove(text.Length - 4)
     else text
+
+
+let formatPhoneNumber text =
+    if String.IsNullOrWhiteSpace(text) then
+        String.Empty
+    else
+        let isAllDigits = text |> Seq.forall (fun x -> Char.IsDigit x)
+
+        if isAllDigits && text.Length = 10 then
+            $"{text.Substring(0, 3)}-{text.Substring(3, 3)}-{text.Substring(6)}"
+        else
+            text
+
+
+let formatWithHeader header text =
+    if String.IsNullOrWhiteSpace(text) then
+        String.Empty
+    else
+        $"{header}{text}"
+

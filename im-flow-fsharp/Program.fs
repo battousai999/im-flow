@@ -3,11 +3,10 @@ open System.IO
 open CommandLineParsing
 open Utils
 open OutputWriter
-open Entry
 open EntryComparer
 open im_flow
 open type Battousai.Utils.ConsoleUtils
-open System.Collections.Generic
+open System.Diagnostics
 
 let app (parameters : Args) =
     let expandFiles filename =
@@ -38,7 +37,25 @@ let app (parameters : Args) =
 
     let outputWriter = if shouldOutputToConsole then buildConsoleWriter() else buildFileWriter(new StreamWriter(outputFilename, false))
 
-    ()
+    let isHighlightedMessage message = 
+        let matchMessages = Option.defaultValue ([] : string list) <| Option.map List.ofSeq (Option.ofObj parameters.MatchMessages)
+
+        if List.isEmpty matchMessages then
+            false
+        else
+            matchMessages |> List.exists (fun x -> StringComparer.OrdinalIgnoreCase.Equals(x, message))
+
+    SummaryRenderer.render
+        outputWriter
+        filteredEntries
+        isHighlightedMessage
+        (not parameters.DisableAutoExpandConsole)
+        ((Seq.length allFilenames) > 1)
+        parameters.SuppressAnnotations
+
+    if parameters.OpenInEditor then
+        new Process(StartInfo = ProcessStartInfo(parameters.OutputFilename, UseShellExecute = true)) |> ignore
+
 
 [<EntryPoint>]
 let main argv =

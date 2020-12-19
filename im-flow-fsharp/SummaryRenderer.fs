@@ -9,7 +9,7 @@ type RenderItem =
     | FilenameSection of string
     | EntrySection of Entry
 
-let render outputWriter entries isHighlightedMessage autoExpand areMultipleFiles =
+let render outputWriter entries isHighlightedMessage autoExpand areMultipleFiles suppressAnnotations =
     let write = outputWriter.WriteAction
     let writeLine = outputWriter.WriteLineAction
     
@@ -62,6 +62,7 @@ let render outputWriter entries isHighlightedMessage autoExpand areMultipleFiles
     let sscPadding = Math.Max(maxSscMessageNameLength, 10)
     let fubuPadding = Math.Max(maxFubuMessageNameLength, 13)
     let fullWidth = lineNumberPadding + 1 + datePadding + 3 + genesysPadding + interceptorPadding + sscPadding + 1 + fubuPadding + 1
+    let annotationBarPadding = lineNumberPadding + 1 + datePadding + 3 + genesysPadding + ((interceptorPadding - 3) / 2)
     let nonGenesysInitialSpacing = String(' ', genesysPadding)
     let fubuAfterSpacing = String(' ', sscPadding + 1)
 
@@ -103,9 +104,95 @@ let render outputWriter entries isHighlightedMessage autoExpand areMultipleFiles
 
             writeLine $"\n{bar}\n{filename}\n{bar}"
         | EntrySection entry ->
-            
+            write <| entry.LineNumber.ToString().PadRight(lineNumberPadding)
+            write " "
+            write <| entry.LogDate.ToLocalTime().ToString(dateFormat)
+            write "   "
 
-        ()
+            if (isError entry) || (isFatal entry) then
+                let header = if isError entry then "ERROR" else "FATAL"
+                
+                writeError $"{header}: {entry.LogMessage}"
+
+                if hasErrorAnnotation entry then
+                    if outputWriter.CanResetCursorPosition then
+                        writeSpaces annotationBarPadding
+                        write "| |"
+                        outputWriter.ResetCursorPosition()
+
+                    writeSpaces <| lineNumberPadding + 1 + datePadding + 3
+                    writeError <| errorAnnotation entry
+            elif isWarning entry then
+                writeWarning $"WARN: {entry.LogMessage}"
+            elif isSpecialInfo entry then
+                writeSpecialInfo $"INFO: {getSpecialInfoText entry}"
+            elif isNonMessageInfo entry then
+                writeSpecialInfo $"INFO: {entry.LogMessage}"
+            elif isGenesysMessage entry then
+                let genesysMessage = Option.defaultValue String.Empty (getGenesysMessage entry)
+
+                if isHighlightedMessage genesysMessage then
+                    writeMessageHighlight <| genesysMessage.PadRight(genesysPadding)
+                elif isEmphasizedMessage entry then
+                    writeEmphasized <| genesysMessage.PadRight(genesysPadding)
+                else
+                    write <| genesysMessage.PadRight(genesysPadding)
+
+                writeLine <| if isReceivedMessage entry then "  ==>  | |       " else " <==   | |       "
+
+                if (hasAnnotation entry) && not suppressAnnotations then
+                    if outputWriter.CanResetCursorPosition then
+                        writeSpaces annotationBarPadding
+                        write "| |"
+                        outputWriter.ResetCursorPosition()
+
+                    writeSpaces <| lineNumberPadding + 1 + datePadding + 3
+
+                    if isEmphasizedMessage entry then
+                        writeEmphasized <| getAnnotation entry
+                    else
+                        write <| getAnnotation entry
+
+                    writeLine ""
+            elif isSscMessage entry then
+                let sscMessage = Option.defaultValue String.Empty (getSscMessage entry)
+
+                write nonGenesysInitialSpacing
+                write <| if isSentMessage entry then "       | |   ==> " else "       | |  <==  "
+
+                if isHighlightedMessage sscMessage then
+                    writeMessageHighlight sscMessage
+                    writeLine ""
+                elif isEmphasizedMessage entry then
+                    writeEmphasized sscMessage
+                    writeLine ""
+                else
+                    writeLine sscMessage
+
+                if (hasAnnotation entry) && not suppressAnnotations then
+                    writeSpaces <| lineNumberPadding + 1 + datePadding + 3
+                    write nonGenesysInitialSpacing
+                    write <| if isSentMessage entry then "       | |       " else "       | |       "
+                    writeLine <| getAnnotation entry
+            elif (isFubuMessage entry) || (isSentToTimService entry) then
+                write nonGenesysInitialSpacing
+                write <| if isSentMessage entry then "       | |   ==> " else "       | |  <==  "
+                write fubuAfterSpacing
+
+                let message = Option.defaultValue $"<{getTimServiceCall entry}>" (getFubuMessage entry)
+
+                if isHighlightedMessage message then
+                    writeMessageHighlight message
+                    writeLine ""
+                else
+                    writeLine message
+
+                if (hasAnnotation entry) && not suppressAnnotations then
+                    writeSpaces <| lineNumberPadding + 1 + datePadding + 3
+                    write nonGenesysInitialSpacing
+                    write <| if isSentMessage entry then "       | |       " else "       | |       "
+                    write fubuAfterSpacing
+                    writeLine <| getAnnotation entry
 
     renderEntries
         |> Seq.iter renderEntry

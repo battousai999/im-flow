@@ -40,9 +40,118 @@ let specialInfoRegexes = [
     Regex(@"^(>>>.*)$")
 ]
 
+let emphasizedMessages = [
+    "RequestMakeCall"
+    "EventRinging"
+    "OfferCallbackMessage"
+]
+
 let ignoredInfoRegexes = [
     Regex(@"Passing through message to", RegexOptions.IgnoreCase)
 ]
+
+type AnnotationInfo = {
+    Regexes: Regex list
+    Projection: string list -> string
+}
+
+let annotations = 
+    [
+        "RequestMakeCall", 
+        { 
+            Regexes = [Regex("\"WTW_DNIS\":\\s\"([^\"]+)\",")]
+            Projection = fun matches -> $"({Utils.formatPhoneNumber matches.[0]})"
+        }
+
+        "EventRinging",
+        {
+            Regexes = [Regex("\\.OtherDN\":\\s\"([^\"]+)\",")]
+            Projection = fun matches -> $"({Utils.formatPhoneNumber matches.[0]})"
+        }
+
+        "EmployeePresenceChangingMessage",
+        {
+            Regexes = [Regex("\"Availability\":\\s\"([^\"]+)\",")]
+            Projection = fun matches -> $"({matches.[0]})"
+        }
+
+        "EmployeePresenceChangedMessage",
+        {
+            Regexes = [Regex("\"Availability\":\\s\"([^\"]+)\",")]
+            Projection = fun matches -> $"({matches.[0]})"
+        }
+
+        "EventReleased",
+        {
+            Regexes = [Regex("\\.ConnID\":\\s\"([^\"]+)\",")]
+            Projection = fun matches -> $"({matches.[0]})"
+        }
+
+        "ParticipantChangedMessage",
+        {
+            Regexes = [
+                Regex("\"Uri\":\\s\"([^\"]*)\"")
+                Regex("\"State\":\\s\"([^\"]*)\",")
+            ]
+            Projection = fun matches -> $"({matches.[0]}/{matches.[1]})"
+        }
+
+        "DispositionCallMessage",
+        {
+            Regexes = [Regex("\"DispositionId\":\\s(\\d+),")]
+            Projection = fun matches -> $"(DispositionId: {matches.[0]})"
+        }
+
+        "InviteInternalParticipantMessage",
+        {
+            Regexes = [
+                Regex("\"InvitedSipAddress\":\\s\"([^\"]+)\",")
+                Regex("\"IsTwoStep\":\\s([^,]+),")
+            ]
+            Projection = fun matches -> 
+                let formatWithHeader = Utils.formatWithHeader ", IsTwoStep: "
+                $"({matches.[0]}{formatWithHeader matches.[1]})"
+        }
+
+        "AddExternalParticipantMessage",
+        {
+            Regexes = [
+                Regex("\"PhoneNumber\":\\s\"([^\"]+)\"")
+                Regex("\"IsTwoStep\":\\s([^,]+),")
+            ]
+            Projection = fun matches ->
+                let formatWithHeader = Utils.formatWithHeader ", IsTwoStep: "
+                $"({Utils.formatPhoneNumber matches.[0]}{formatWithHeader matches.[1]})"
+        }
+
+        "TransferCallToEmployeeMessage",
+        {
+            Regexes = [
+                Regex("\"DesiredRoleId\":\\s([^,]+),")
+                Regex("\"IsWarmTransfer\":\\s([^,]+),")
+                Regex("\"IsTwoStep\":\\s([^,]+),")
+            ]
+            Projection = fun matches ->
+                let format1 = Utils.formatWithHeader ", IsWarmTransfer: "
+                let format2 = Utils.formatWithHeader ", IsTwoStep: "
+                $"(DesiredRoleId: {matches.[0]}{format1 matches.[1]}{format2 matches.[2]})"
+        }
+
+        "TserverReconnectionStatusChangedMessage",
+        {
+            Regexes = [Regex("\"Status\":\\s\"([^\"]+)\"")]
+            Projection = fun matches -> $"({matches.[0]})"
+        }
+
+        "EventError",
+        {
+            Regexes = [
+                Regex("\\.ErrorCode\":\\s(\\d+),")
+                Regex("\\.ErrorMessage\":\\s\"([^\"]*)\",")
+            ]
+            Projection = fun matches -> $"({matches.[0]} — {matches.[1]})"
+        }
+    ] |> Map.ofList
 
 type Entry = {
     Filename : string
@@ -140,3 +249,59 @@ let hasPayloadFor (sourceEntry : Entry) (candidate : Entry) =
 
         StringComparer.OrdinalIgnoreCase.Equals(getMessageName sourceEntry, payloadName)
     | _ -> false
+
+
+let errorAnnotation entry =
+    if not (isError entry) || not (isFatal entry) || (List.isEmpty entry.ExtraLines) then
+        String.Empty
+    else
+        List.head entry.ExtraLines
+
+
+let hasErrorAnnotation entry = not (String.IsNullOrWhiteSpace(errorAnnotation entry))
+
+
+let getSpecialInfoText entry = 
+    let matched = specialInfoRegexes |> List.tryFind (fun x -> x.IsMatch(entry.LogMessage))
+
+    match matched with
+    | Some m -> 
+        let results = m.Match(entry.LogMessage)
+        if results.Success then
+            results.Groups.[1].Value
+        else
+            String.Empty
+    | None -> String.Empty
+
+
+let isEmphasizedMessage entry = emphasizedMessages |> List.exists (fun x -> StringComparer.OrdinalIgnoreCase.Equals(x, getMessageName entry))
+
+
+let calculateAnnotation annotation (lines : string seq) =
+    let getAnnotation text =
+        let matches = annotation.Regexes |> List.map (fun x -> x.Match(text))
+
+        if not (matches |> List.exists (fun x -> x.Success)) then
+            String.Empty
+        else
+            let values = matches |> List.map (fun x -> if x.Success then x.Groups.[1].Value else String.Empty)
+
+            annotation.Projection values
+
+    getAnnotation <| String.Join(Environment.NewLine, lines)
+
+
+let getAnnotation entry =
+    let extraLines = match entry.PayloadEntry with | Some p -> p.ExtraLines | None -> []
+
+    if List.isEmpty extraLines then
+        String.Empty
+    else
+        let annotation = Map.tryFind (Option.defaultValue String.Empty (getMessageName entry)) annotations
+
+        match annotation with
+        | Some a -> calculateAnnotation a extraLines
+        | None -> String.Empty
+
+
+let hasAnnotation entry = not (String.IsNullOrWhiteSpace(getAnnotation entry))
