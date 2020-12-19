@@ -5,7 +5,7 @@ open System.IO
 open System.Text.RegularExpressions
 
 let containsWildcards (filename : string) =
-    false
+    filename.Contains("*") || filename.Contains("?")
 
 
 let enumerateFiles (filename : string) =
