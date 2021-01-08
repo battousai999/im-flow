@@ -14,7 +14,7 @@ let render outputWriter entries isHighlightedMessage autoExpand areMultipleFiles
     let writeLine = outputWriter.WriteLineAction
     
     let buildColoredWriter color action =
-        fun text -> outputWriter.DoInColorContext (fun () -> action text) color
+        fun text -> outputWriter.DoInColorContext color (fun () -> action text)
 
     let writeError = buildColoredWriter ConsoleColor.Red writeLine
     let writeWarning = buildColoredWriter ConsoleColor.Yellow writeLine
@@ -29,7 +29,7 @@ let render outputWriter entries isHighlightedMessage autoExpand areMultipleFiles
         let getLength entry = (getGenesysMessage entry) |> Option.fold (fun _ e -> e.Length) 0
 
         entries 
-            |> Seq.filter (fun x -> (isReceivedFromGenesys x) && (isSentToGenesys x)) 
+            |> Seq.filter (fun x -> (isReceivedFromGenesys x) || (isSentToGenesys x)) 
             |> safeMaxBy getLength
 
     let maxFubuMessageNameLength = 
@@ -42,14 +42,14 @@ let render outputWriter entries isHighlightedMessage autoExpand areMultipleFiles
                 | None -> 0
         
         entries 
-            |> Seq.filter (fun x -> (isReceivedFromFubu x) && (isSentToFubu x) && (isSentToTimService x))
+            |> Seq.filter (fun x -> (isReceivedFromFubu x) || (isSentToFubu x) || (isSentToTimService x))
             |> safeMaxBy getLength
 
     let maxSscMessageNameLength = 
         let getLength entry = (getSscMessage entry) |> Option.fold (fun _ e -> e.Length) 0
 
         entries 
-            |> Seq.filter (fun x -> (isReceivedFromSsc x) && (isSentToSsc x))
+            |> Seq.filter (fun x -> (isReceivedFromSsc x) || (isSentToSsc x))
             |> safeMaxBy getLength
 
     let dateFormat = "HH:mm:ss.ffff zzz"
@@ -196,5 +196,3 @@ let render outputWriter entries isHighlightedMessage autoExpand areMultipleFiles
 
     renderEntries
         |> Seq.iter renderEntry
-
-    ()

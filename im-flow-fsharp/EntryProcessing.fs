@@ -29,11 +29,18 @@ let associatePayloads (entries : Entry list) =
     let alreadyAssociatedEntries = HashSet<Entry>()
 
     let projection entry =
+        let safeSkip num list = 
+            list
+                |> Seq.indexed
+                |> Seq.skipWhile (fst >> (>) num)
+                |> Seq.map snd
+
         let subsequentEntries = 
             entries 
-                |> List.skipWhile (fun x -> x <> entry)
-                |> List.skip 1
-                |> List.take 100
+                |> List.toSeq
+                |> Seq.skipWhile (fun x -> x <> entry)
+                |> safeSkip 1
+                |> Seq.truncate 100
 
         let candidatePayloads = 
             seq {
@@ -87,7 +94,10 @@ let parseEntries parseDatesAsLocal (rawEntries : RawEntry seq) =
 
             (entries, lastEntry, extraLines)
 
-    let (entries, _, _) = rawEntries |> Seq.fold accumulator (ResizeArray(), None, ResizeArray())
+    let (entries, lastEntry, extraLines) = rawEntries |> Seq.fold accumulator (ResizeArray(), None, ResizeArray())
+
+    if lastEntry.IsSome then
+        entries.Add({ lastEntry.Value with ExtraLines = List.ofSeq extraLines })
 
     List.ofSeq entries |> associatePayloads
     

@@ -240,15 +240,20 @@ let getMessageName entry =
 
 
 let hasPayloadFor (sourceEntry : Entry) (candidate : Entry) =
-    match candidate.LogMessage with
-    | Utils.Regex payloadDetailsRegex [ rawPayloadName ] ->
-        let payloadName = 
-            if isGenesysMessage sourceEntry
-            then Utils.removeTrailingData rawPayloadName
-            else rawPayloadName
+    let messageName = getMessageName sourceEntry
 
-        StringComparer.OrdinalIgnoreCase.Equals(getMessageName sourceEntry, payloadName)
-    | _ -> false
+    match getMessageName sourceEntry with
+    | Some messageName ->
+        match candidate.LogMessage with
+        | Utils.Regex payloadDetailsRegex [ rawPayloadName ] ->
+            let payloadName = 
+                if isGenesysMessage sourceEntry
+                then Utils.removeTrailingData rawPayloadName
+                else rawPayloadName
+
+            StringComparer.OrdinalIgnoreCase.Equals(messageName, payloadName)
+        | _ -> false
+    | None -> false
 
 
 let errorAnnotation entry =
@@ -274,7 +279,15 @@ let getSpecialInfoText entry =
     | None -> String.Empty
 
 
-let isEmphasizedMessage entry = emphasizedMessages |> List.exists (fun x -> StringComparer.OrdinalIgnoreCase.Equals(x, getMessageName entry))
+let isEmphasizedMessage entry = 
+    let messageName = getMessageName entry
+
+    let equals x =
+        match messageName with
+        | Some m -> StringComparer.OrdinalIgnoreCase.Equals(m, x)
+        | None -> false
+
+    emphasizedMessages |> List.exists equals
 
 
 let calculateAnnotation annotation (lines : string seq) =
