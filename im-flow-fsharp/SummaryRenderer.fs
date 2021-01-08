@@ -179,7 +179,7 @@ let render outputWriter entries isHighlightedMessage autoExpand areMultipleFiles
                 write <| if isSentMessage entry then "       | |   ==> " else "       | |  <==  "
                 write fubuAfterSpacing
 
-                let message = Option.defaultValue $"<{getTimServiceCall entry}>" (getFubuMessage entry)
+                let message = Option.defaultValue $"<{Option.defaultValue String.Empty (getTimServiceCall entry)}>" (getFubuMessage entry)
 
                 if isHighlightedMessage message then
                     writeMessageHighlight message
