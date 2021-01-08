@@ -29,7 +29,7 @@ let app (parameters : Args) =
 
     let entriesFilter = fun x ->
         ((Entry.isMessage x) || (isError x) || (Entry.isSpecialInfo x) || (isFullInfo x)) &&
-        (parameters.IncludeHeartbeat || (not <| StringComparer.OrdinalIgnoreCase.Equals((Entry.getGenesysMessage x), "EventAddressInfo")))
+        (parameters.IncludeHeartbeat || (not <| StringComparer.OrdinalIgnoreCase.Equals(Option.defaultValue "" (Entry.getGenesysMessage x), "EventAddressInfo")))
 
     let filteredEntries = entries 
                             |> List.filter entriesFilter
@@ -52,6 +52,8 @@ let app (parameters : Args) =
         (not parameters.DisableAutoExpandConsole)
         ((Seq.length allFilenames) > 1)
         parameters.SuppressAnnotations
+
+    outputWriter.CloseWriter()
 
     if parameters.OpenInEditor then
         new Process(StartInfo = ProcessStartInfo(parameters.OutputFilename, UseShellExecute = true)) |> ignore

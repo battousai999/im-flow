@@ -10,6 +10,7 @@ type OutputWriter = {
     SetWidth: int -> unit
     ResetCursorPosition: unit -> unit
     CanResetCursorPosition: bool
+    CloseWriter: unit -> unit
 }
 
 let buildFileWriter (writer : StreamWriter) =
@@ -20,6 +21,10 @@ let buildFileWriter (writer : StreamWriter) =
         SetWidth = fun _ -> ()
         ResetCursorPosition = fun () -> ()
         CanResetCursorPosition = false
+        CloseWriter = 
+            fun () ->
+                writer.Flush()
+                writer.Dispose()
     }
 
 
@@ -37,4 +42,5 @@ let buildConsoleWriter() =
         SetWidth = fun width -> Console.WindowWidth <- Math.Max(width, Console.WindowWidth)
         ResetCursorPosition = fun () -> Console.SetCursorPosition(0, Console.CursorTop)
         CanResetCursorPosition = true
+        CloseWriter = fun () -> ()
     }
