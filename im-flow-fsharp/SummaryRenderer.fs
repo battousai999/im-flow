@@ -16,6 +16,7 @@ let render outputWriter entries isHighlightedMessage autoExpand areMultipleFiles
     let buildColoredWriter color action =
         fun text -> outputWriter.DoInColorContext color (fun () -> action text)
 
+    // Build some "writers"
     let writeError = buildColoredWriter ConsoleColor.Red writeLine
     let writeWarning = buildColoredWriter ConsoleColor.Yellow writeLine
     let writeSpecialInfo = buildColoredWriter ConsoleColor.Cyan writeLine
@@ -52,10 +53,13 @@ let render outputWriter entries isHighlightedMessage autoExpand areMultipleFiles
             |> Seq.filter (fun x -> (isReceivedFromSsc x) || (isSentToSsc x))
             |> safeMaxBy getLength
 
-    let dateFormat = "HH:mm:ss.ffff zzz"
     let lineNumberPadding = 
         let maxLineNumber = entries |> safeMaxBy (fun x -> x.LineNumber.ToString().Length)
+
         Math.Max(maxLineNumber, 7)
+    
+    // Calculate some column size constraints
+    let dateFormat = "HH:mm:ss.ffff zzz"
     let datePadding = DateTimeOffset.Now.ToString(dateFormat).Length
     let genesysPadding = Math.Max(maxGenesysMessageNameLength, 10)
     let interceptorPadding = 17
@@ -66,6 +70,9 @@ let render outputWriter entries isHighlightedMessage autoExpand areMultipleFiles
     let nonGenesysInitialSpacing = String(' ', genesysPadding)
     let fubuAfterSpacing = String(' ', sscPadding + 1)
 
+    // Map (not 1-to-1, so use a fold) the entries into entries intermixed with elements that indicate
+    // a new file from which subsequent entries originate (which will eventually be rendered as dividers
+    // between entries).
     let renderEntries = 
         if not areMultipleFiles then
             entries |> Seq.map (fun x -> EntrySection x)
@@ -96,6 +103,7 @@ let render outputWriter entries isHighlightedMessage autoExpand areMultipleFiles
     writeLine " CoreBus/TIM"
     writeLine (String('=', fullWidth))
 
+    // Write entries
     let renderEntry entry =
         match entry with
         | FilenameSection fullFilename ->

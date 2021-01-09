@@ -16,7 +16,7 @@ type RawEntry = {
     Text : string
 }
 
-
+// Read raw entries (where each raw entry is a representation of a line of text) from a file
 let readRawEntries (filenames : string seq) =
     let readFile filename =
         File.ReadAllLines(filename)
@@ -25,6 +25,8 @@ let readRawEntries (filenames : string seq) =
     filenames |> Seq.collect readFile
 
 
+// For each entry that represents a "message", the associated entry (if it exists) that 
+// contains the "payload" for the message.
 let associatePayloads (entries : Entry list) =
     let alreadyAssociatedEntries = HashSet<Entry>()
 
@@ -60,6 +62,7 @@ let associatePayloads (entries : Entry list) =
     entries |> List.map projection
 
 
+// Parse raw entries (i.e., each a representation of a line of text) into Entry objects
 let parseEntries parseDatesAsLocal (rawEntries : RawEntry seq) =
     let dateTimeStyle = if parseDatesAsLocal then DateTimeStyles.AssumeLocal else DateTimeStyles.AssumeUniversal
 

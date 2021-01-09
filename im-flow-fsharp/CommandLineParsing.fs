@@ -81,6 +81,7 @@ let createParser() =
     parser
 
 
+// Build "help text" for display to the user
 let getHelpDisplay (parser : FluentCommandLineParser<'a>) =
     let longNamePadding = Enumerable.Max(parser.Options, fun x -> x.LongName.Length)
 
@@ -101,6 +102,7 @@ let getHelpDisplay (parser : FluentCommandLineParser<'a>) =
     List.fold (fun acc x -> $"{acc}{Environment.NewLine}{x}") "" lines
 
 
+// Parse the given command-line parameters into a representation of the program options
 let parse args =
     let parser = createParser()
     let results = parser.Parse(args)

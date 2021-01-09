@@ -13,6 +13,7 @@ let app (parameters : Args) =
         if containsWildcards filename then enumerateFiles filename
         else Seq.singleton filename
 
+    // Determine filenames to process
     let allFilenames = parameters.Filenames |> Seq.collect expandFiles
     let shouldOutputToConsole = String.IsNullOrWhiteSpace(parameters.OutputFilename)
 
@@ -21,9 +22,11 @@ let app (parameters : Args) =
         then $"{Path.GetTempFileName()}.txt"
         else parameters.OutputFilename            
 
+    // Read lines from files and then process entries
     let rawEntries = EntryProcessing.readRawEntries allFilenames
     let entries = rawEntries |> EntryProcessing.parseEntries parameters.ParseLogDatesAsLocal
 
+    // Render entries to output
     let isError = fun x -> (not parameters.IgnoreErrors) && ((Entry.isError x) || (Entry.isFatal x) || (Entry.isWarning x))
     let isFullInfo = fun x -> parameters.ShowAllInfoMessages && (Entry.isNonMessageInfo x)
 
@@ -31,18 +34,17 @@ let app (parameters : Args) =
         ((Entry.isMessage x) || (isError x) || (Entry.isSpecialInfo x) || (isFullInfo x)) &&
         (parameters.IncludeHeartbeat || (not <| StringComparer.OrdinalIgnoreCase.Equals(Option.defaultValue "" (Entry.getGenesysMessage x), "EventAddressInfo")))
 
-    let filteredEntries = entries 
-                            |> List.filter entriesFilter
-                            |> List.sortWith entryComparer
+    let filteredEntries = 
+        entries 
+            |> List.filter entriesFilter
+            |> List.sortWith entryComparer
 
     let outputWriter = if shouldOutputToConsole then buildConsoleWriter() else buildFileWriter(new StreamWriter(outputFilename, false))
 
     let isHighlightedMessage message = 
         let matchMessages = Option.defaultValue ([] : string list) <| Option.map List.ofSeq (Option.ofObj parameters.MatchMessages)
 
-        if List.isEmpty matchMessages then
-            false
-        else
+        not (List.isEmpty matchMessages) && 
             matchMessages |> List.exists (fun x -> StringComparer.OrdinalIgnoreCase.Equals(x, message))
 
     SummaryRenderer.render
@@ -55,6 +57,7 @@ let app (parameters : Args) =
 
     outputWriter.CloseWriter()
 
+    // Open in a default editor if requested
     if parameters.OpenInEditor then
         new Process(StartInfo = ProcessStartInfo(parameters.OutputFilename, UseShellExecute = true)) |> ignore
 
