@@ -306,9 +306,13 @@ namespace im_flow
 
                             if (message.HasErrorAnnotation)
                             {
-                                writeSpaces(annotationBarPadding);
-                                write("| |");
-                                Console.SetCursorPosition(0, Console.CursorTop);
+                                if (isOutputToConsole)
+                                {
+                                    writeSpaces(annotationBarPadding);
+                                    write("| |");
+                                    Console.SetCursorPosition(0, Console.CursorTop);
+                                }
+
                                 writeSpaces(lineNumberPadding + 1 + datePadding + 3);
                                 writeError(message.ErrorAnnotation);
                             }
@@ -319,9 +323,13 @@ namespace im_flow
 
                             if (message.HasErrorAnnotation)
                             {
-                                writeSpaces(annotationBarPadding);
-                                write("| |");
-                                Console.SetCursorPosition(0, Console.CursorTop);
+                                if (isOutputToConsole)
+                                {
+                                    writeSpaces(annotationBarPadding);
+                                    write("| |");
+                                    Console.SetCursorPosition(0, Console.CursorTop);
+                                }
+
                                 writeSpaces(lineNumberPadding + 1 + datePadding + 3);
                                 writeError(message.ErrorAnnotation);
                             }
@@ -353,9 +361,13 @@ namespace im_flow
 
                             if (message.HasAnnotation && !suppressAnnotations)
                             {
-                                writeSpaces(annotationBarPadding);
-                                write("| |");
-                                Console.SetCursorPosition(0, Console.CursorTop);
+                                if (isOutputToConsole)
+                                {
+                                    writeSpaces(annotationBarPadding);
+                                    write("| |");
+                                    Console.SetCursorPosition(0, Console.CursorTop);
+                                }
+
                                 writeSpaces(lineNumberPadding + 1 + datePadding + 3);
 
                                 if (message.IsEmphasizedMessage)

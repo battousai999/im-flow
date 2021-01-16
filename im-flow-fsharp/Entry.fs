@@ -240,8 +240,6 @@ let getMessageName entry =
 
 
 let hasPayloadFor (sourceEntry : Entry) (candidate : Entry) =
-    let messageName = getMessageName sourceEntry
-
     match getMessageName sourceEntry with
     | Some messageName ->
         match candidate.LogMessage with
@@ -257,7 +255,7 @@ let hasPayloadFor (sourceEntry : Entry) (candidate : Entry) =
 
 
 let errorAnnotation entry =
-    if not (isError entry) || not (isFatal entry) || (List.isEmpty entry.ExtraLines) then
+    if not ((isError entry) || (isFatal entry)) || (List.isEmpty entry.ExtraLines) then
         String.Empty
     else
         List.head entry.ExtraLines
